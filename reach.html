@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>触达 · 运营中心</title>
+  <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+  <header id="topNav"></header>
+
+  <div class="reach-layout">
+    <!-- 左侧菜单 -->
+    <aside class="side-menu">
+      <div class="menu-item active"><i data-lucide="send"></i>触达任务</div>
+      <div class="menu-item"><i data-lucide="file-text"></i>模板管理</div>
+      <div class="menu-item"><i data-lucide="git-branch"></i>通道管理</div>
+      <div class="menu-item"><i data-lucide="bar-chart-3"></i>数据统计</div>
+      <div class="menu-item"><i data-lucide="settings"></i>触达设置</div>
+    </aside>
+
+    <!-- 中间预览区：手机主屏幕 -->
+    <section class="preview-pane">
+      <div class="pane-title">触达通道</div>
+      <div class="pane-hint">点击屏幕中的通道图标即可新建触达任务</div>
+      <div class="phone-screen" id="phoneScreen">
+        <div class="phone-clock">
+          <div class="time" id="phoneTime">20:12</div>
+          <div class="date" id="phoneDate">7月9日 星期四</div>
+        </div>
+        <div class="app-grid">
+          <button class="app-item" data-channel="sms">
+            <span class="app-icon"><i data-lucide="message-square"></i></span><span>SMS</span>
+          </button>
+          <button class="app-item" data-channel="email">
+            <span class="app-icon"><i data-lucide="mail"></i></span><span>邮件</span>
+          </button>
+          <button class="app-item" data-channel="push">
+            <span class="app-icon"><i data-lucide="bell"></i></span><span>Push</span>
+          </button>
+          <button class="app-item" data-channel="viber">
+            <span class="app-icon"><i data-lucide="phone-call"></i></span><span>Viber</span>
+          </button>
+          <button class="app-item" data-channel="telegram">
+            <span class="app-icon"><i data-lucide="send"></i></span><span>Telegram</span>
+          </button>
+          <button class="app-item" data-channel="tele">
+            <span class="app-icon"><i data-lucide="headphones"></i></span><span>电销</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 右侧消息/列表区 -->
+    <section class="list-pane">
+      <div class="welcome-block">
+        <h2 id="greeting"></h2>
+        <p id="greetSub"></p>
+      </div>
+      <div class="task-list" id="taskList"></div>
+    </section>
+  </div>
+
+  <!-- 跟随鼠标的气泡提示 -->
+  <div class="cursor-tip" id="cursorTip"></div>
+
+  <!-- 新建任务抽屉 -->
+  <div class="drawer-root" id="taskDrawer">
+    <div class="drawer-mask" data-close></div>
+    <aside class="drawer drawer-xl">
+      <header class="drawer-header">
+        <h3>新建任务</h3>
+        <button class="icon-btn" data-close aria-label="关闭"><i data-lucide="x"></i></button>
+      </header>
+
+      <div class="nt-cols">
+        <!-- 左：预览 -->
+        <section class="nt-preview">
+          <div class="pane-caption">预览</div>
+          <div id="ntPreview"></div>
+        </section>
+
+        <!-- 中：任务配置 -->
+        <section class="nt-config">
+          <div class="field">
+            <span class="field-label">任务名称</span>
+            <input class="input" id="ntName" placeholder="请输入任务名称">
+          </div>
+
+          <div class="field">
+            <span class="field-label">人群</span>
+            <div class="cfg-row" id="rowAudience">
+              <div class="cfg-value" id="audienceValue"><span class="placeholder">请选择人群</span></div>
+              <i data-lucide="chevron-right"></i>
+            </div>
+          </div>
+
+          <div class="field">
+            <span class="field-label">通道</span>
+            <div class="tabs" id="ntTabs"></div>
+
+            <div class="field">
+              <span class="field-label">时机</span>
+              <div class="cfg-row" id="rowTiming">
+                <div class="cfg-value" id="timingValue"><span class="placeholder">请选择发送时机</span></div>
+                <i data-lucide="chevron-right"></i>
+              </div>
+            </div>
+
+            <div class="field">
+              <span class="field-label">内容</span>
+              <div class="cfg-row" id="rowContent">
+                <div class="cfg-value" id="contentValue"><span class="placeholder">请配置发送内容</span></div>
+                <i data-lucide="chevron-right"></i>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 右：配置项内容区（条件显示） -->
+        <section class="nt-panel" id="ntPanel">
+          <div class="panel-empty">点击左侧配置项查看详情</div>
+        </section>
+      </div>
+
+      <footer class="drawer-footer">
+        <button class="btn btn-outline" data-close>取消</button>
+        <button class="btn btn-primary" id="createTaskBtn">创建任务</button>
+      </footer>
+    </aside>
+  </div>
+
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+  <script src="assets/common.js"></script>
+  <script src="assets/reach.js"></script>
+</body>
+</html>
