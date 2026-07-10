@@ -7,18 +7,12 @@
   <link rel="stylesheet" href="assets/styles.css">
 </head>
 <body>
-  <header id="topNav"></header>
-
-  <div class="reach-layout">
-    <!-- 左侧菜单 -->
-    <aside class="side-menu">
-      <div class="menu-item active"><i data-lucide="send"></i>触达任务</div>
-      <div class="menu-item"><i data-lucide="file-text"></i>模板管理</div>
-      <div class="menu-item"><i data-lucide="git-branch"></i>通道管理</div>
-      <div class="menu-item"><i data-lucide="bar-chart-3"></i>数据统计</div>
-      <div class="menu-item"><i data-lucide="settings"></i>触达设置</div>
-    </aside>
-
+  <div class="app-layout">
+    <aside id="sidebar"></aside>
+    <div class="app-content">
+      <header id="topbar"></header>
+      <div class="content-body">
+      <div class="reach-layout">
     <!-- 中间预览区：手机主屏幕 -->
     <section class="preview-pane">
       <div class="pane-title">触达通道</div>
@@ -59,6 +53,9 @@
       </div>
       <div class="task-list" id="taskList"></div>
     </section>
+      </div>
+      </div>
+    </div>
   </div>
 
   <!-- 跟随鼠标的气泡提示 -->

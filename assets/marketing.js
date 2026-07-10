@@ -7,7 +7,8 @@ const TEMPLATES = {
 };
 
 document.addEventListener('DOMContentLoaded', () => {
-  renderTopNav('marketing');
+  renderSidebar('marketing', 'marketing-campaign');
+  renderTopbar();
   bindDrawerClose();
 
   // 打开抽屉

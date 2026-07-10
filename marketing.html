@@ -7,9 +7,12 @@
   <link rel="stylesheet" href="assets/styles.css">
 </head>
 <body>
-  <header id="topNav"></header>
-
-  <main class="page-main">
+  <div class="app-layout">
+    <aside id="sidebar"></aside>
+    <div class="app-content">
+      <header id="topbar"></header>
+      <div class="content-body">
+      <main class="page-main">
     <h1 class="page-title">营销活动</h1>
     <p class="page-desc">管理进行中的营销活动，并为活动配置触达策略</p>
 
@@ -53,7 +56,10 @@
         </tbody>
       </table>
     </section>
-  </main>
+      </main>
+      </div>
+    </div>
+  </div>
 
   <!-- 触达配置抽屉 -->
   <div class="drawer-root" id="reachDrawer">

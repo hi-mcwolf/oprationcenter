@@ -436,7 +436,8 @@ function createTask() {
 
 /* ---------------- 初始化 ---------------- */
 document.addEventListener('DOMContentLoaded', () => {
-  renderTopNav('reach');
+  renderSidebar('reach', 'reach-task');
+  renderTopbar();
   bindDrawerClose();
   updateGreeting();
   renderTasks();
