@@ -60,7 +60,7 @@ let TEMPLATE_RECORDS = [
   },
   {
     id: 'tpl-004', name: '系统维护通知', code: 'TPL-INBOX-0003', type: '通知类', channel: 'Inbox',
-    langs: '多语言', bizLine: 'BingoPlus', status: 'active', creator: 'marvin@',
+    langs: '中文', bizLine: 'BingoPlus', status: 'active', creator: 'marvin@',
     createdAt: '2026-06-25 16:40', updatedAt: '2026-07-06 09:25', updatedBy: 'marvin@',
     content: { title: '系统升级维护通知', body: '系统将于 {{expire_time}} 进行升级维护，期间部分功能暂不可用，敬请谅解。', buttonText: '查看详情' },
     variables: [
@@ -111,7 +111,7 @@ let TEMPLATE_RECORDS = [
   },
   {
     id: 'tpl-008', name: 'VIP 生日祝福邮件', code: 'TPL-EMAIL-0018', type: '生命周期类', channel: '邮件',
-    langs: '多语言', bizLine: 'BP-VIP', status: 'active', creator: 'lily@',
+    langs: '英文', bizLine: 'BP-VIP', status: 'active', creator: 'lily@',
     createdAt: '2026-06-08 15:50', updatedAt: '2026-07-07 11:20', updatedBy: 'lily@',
     content: { subject: 'Happy Birthday, {{user_name}}!', subtitle: 'Your exclusive VIP gift awaits', body: 'Dear {{user_name}}, on your special day we have prepared an exclusive birthday gift worth {{bonus_amount}}. Log in now to claim it!', ctaText: 'Claim Gift', ctaLink: 'https://bingoplus.com/vip/birthday' },
     variables: [
@@ -201,7 +201,7 @@ let TEMPLATE_RECORDS = [
   },
   {
     id: 'tpl-015', name: '周末大促 Push', code: 'TPL-PUSH-0044', type: '营销类', channel: 'Push',
-    langs: '多语言', bizLine: 'ArenaPlus', status: 'rejected', creator: 'ken@',
+    langs: '英文', bizLine: 'ArenaPlus', status: 'rejected', creator: 'ken@',
     createdAt: '2026-07-09 11:00', updatedAt: '2026-07-10 09:15', updatedBy: 'marvin@',
     content: { title: 'Weekend Mega Sale', body: 'Deposit now and get up to 10% bonus! Limited time only.', link: 'arenplus://promo', imageHint: '促销 Banner' },
     variables: [],
@@ -212,7 +212,7 @@ let TEMPLATE_RECORDS = [
   },
   {
     id: 'tpl-016', name: '验证码通知', code: 'TPL-SMS-0001', type: '通知类', channel: 'SMS',
-    langs: '多语言', bizLine: 'BingoPlus', status: 'active', creator: 'marvin@',
+    langs: '中文', bizLine: 'BingoPlus', status: 'active', creator: 'marvin@',
     createdAt: '2026-05-10 09:00', updatedAt: '2026-06-30 14:30', updatedBy: 'marvin@',
     content: { text: 'Your verification code is {{verify_code}}. Valid for 5 minutes. Do not share with anyone.', hasShortLink: false, signature: 'BPLUS' },
     variables: [
@@ -268,13 +268,11 @@ function renderKpis() {
   const active = TEMPLATE_RECORDS.filter(t => t.status === 'active').length;
   const reviewing = TEMPLATE_RECORDS.filter(t => t.status === 'reviewing').length;
   const disabled = TEMPLATE_RECORDS.filter(t => t.status === 'disabled').length;
-  const multilang = TEMPLATE_RECORDS.filter(t => t.langs === '多语言').length;
   document.getElementById('kpiGrid').innerHTML = [
     { title: '模板总数', value: total, cls: '' },
     { title: '生效中模板数', value: active, cls: 'kpi-green' },
     { title: '审核中模板数', value: reviewing, cls: 'kpi-orange' },
     { title: '停用模板数', value: disabled, cls: '' },
-    { title: '多语言模板数', value: multilang, cls: 'kpi-blue' },
   ].map(k => `
     <div class="kpi-card">
       <div class="kpi-title">${k.title}</div>
@@ -294,9 +292,8 @@ function applyFilters() {
   const creator = document.getElementById('fCreator').value;
 
   filtered = TEMPLATE_RECORDS.filter(t => {
-    if (activeCat === 'multilang' && t.langs !== '多语言') return false;
     if (activeCat === 'reviewing' && t.status !== 'reviewing') return false;
-    if (activeCat !== 'all' && activeCat !== 'multilang' && activeCat !== 'reviewing' && t.channel !== activeCat) return false;
+    if (activeCat !== 'all' && activeCat !== 'reviewing' && t.channel !== activeCat) return false;
     return (!name || t.name.toLowerCase().includes(name)) &&
       (!code || t.code.toLowerCase().includes(code)) &&
       (!type || t.type === type) &&
@@ -605,11 +602,6 @@ function renderDrawerBody(tpl, mode, scrollToVersions) {
           </select></div>
       </div>
       <div class="field-row-2">
-        <div class="field"><span class="field-label">语言版本</span>
-          <select class="select" id="fTplLang">
-            ${['中文','英文','菲律宾语','多语言'].map(l =>
-              `<option${l === tpl.langs ? ' selected' : ''}>${l}</option>`).join('')}
-          </select></div>
         <div class="field"><span class="field-label">所属业务线</span>
           <select class="select" id="fTplBiz">
             ${['BingoPlus','ArenaPlus','BP-VIP'].map(b =>
@@ -623,7 +615,6 @@ function renderDrawerBody(tpl, mode, scrollToVersions) {
         <div class="desc-item"><span class="desc-label">模板编码</span><span>${tpl.code}</span></div>
         <div class="desc-item"><span class="desc-label">模板类型</span><span>${tpl.type}</span></div>
         <div class="desc-item"><span class="desc-label">通道类型</span><span><span class="tag tag-primary">${tpl.channel}</span></span></div>
-        <div class="desc-item"><span class="desc-label">语言版本</span><span>${tpl.langs}</span></div>
         <div class="desc-item"><span class="desc-label">所属业务线</span><span>${tpl.bizLine}</span></div>
         <div class="desc-item"><span class="desc-label">当前状态</span><span class="tag ${st.cls}">${st.label}</span></div>
         <div class="desc-item"><span class="desc-label">创建人 / 更新时间</span><span>${tpl.creator} · ${tpl.updatedAt}</span></div>
@@ -782,7 +773,6 @@ function saveTemplate(submitReview) {
   tpl.name = form.querySelector('#fTplName')?.value.trim() || tpl.name;
   tpl.code = form.querySelector('#fTplCode')?.value.trim() || tpl.code;
   tpl.type = form.querySelector('#fTplType')?.value || tpl.type;
-  tpl.langs = form.querySelector('#fTplLang')?.value || tpl.langs;
   tpl.bizLine = form.querySelector('#fTplBiz')?.value || tpl.bizLine;
   if (!tpl.name) { showToast('请输入模板名称'); return; }
   if (!tpl.code) { showToast('请输入模板编码'); return; }
