@@ -10,6 +10,7 @@ const CHANNELS = {
   tele:     { label: '电销',     tip: '电销',     icon: 'headphones' },
 };
 
+/* 星灵标签（DEMO 数据） */
 const AUDIENCES = [
   { id: 'active',  name: '活跃用户',   count: 12800 },
   { id: 'vip',     name: 'VIP用户',    count: 2300 },
@@ -27,6 +28,9 @@ const CONTENT_TEMPLATES = [
 
 const WEEKDAYS = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
 
+/* 触达策略选择面板使用的分类（数据来自 strategy-data.js） */
+const STRATEGY_PICK_CATEGORIES = ['audience', 'send', 'frequency', 'dnd', 'dedup', 'retry'];
+
 let tasks = [
   { name: '世界杯竞猜预热短信', channel: 'sms',  total: 12800, sent: 9632 },
   { name: '新用户充值召回邮件', channel: 'email', total: 5600,  sent: 2128 },
@@ -43,12 +47,16 @@ function newChannelConfig() {
 function initDraft(channel) {
   draft = {
     name: '',
-    audience: [],
+    productLine: '',
+    audienceTags: [],
+    audienceFiles: [],
+    strategies: [],
     channels: [channel],
     active: channel,
     perChannel: { [channel]: newChannelConfig() },
   };
   document.getElementById('ntName').value = '';
+  document.getElementById('ntProductLine').value = '';
   closePanel();
   renderTabs();
   renderRows();
@@ -98,8 +106,8 @@ function bindPhoneScreen() {
   screen.addEventListener('mousemove', e => {
     const item = e.target.closest('.app-item');
     tip.textContent = item
-      ? `点击创建新${CHANNELS[item.dataset.channel].tip}`
-      : '请点击创建新任务';
+      ? `点击创建${CHANNELS[item.dataset.channel].tip}`
+      : '点击APP图标创建任务';
     tip.style.display = 'block';
     tip.style.left = e.clientX + 'px';
     tip.style.top = e.clientY + 'px';
@@ -183,10 +191,17 @@ function timingLabel(t) {
 }
 
 function renderRows() {
-  // 人群（跨通道共享）
+  // 人群（星灵标签 + 上传，跨通道共享）
   const av = document.getElementById('audienceValue');
-  av.innerHTML = draft.audience.length
-    ? `<span class="cfg-summary">${draft.audience.map(id => AUDIENCES.find(a => a.id === id).name).join(' · ')}</span>`
+  const parts = [];
+  if (draft.audienceTags.length) {
+    parts.push(draft.audienceTags.map(id => AUDIENCES.find(a => a.id === id).name).join(' · '));
+  }
+  if (draft.audienceFiles.length) {
+    parts.push(`已上传 ${draft.audienceFiles.length} 个文件`);
+  }
+  av.innerHTML = parts.length
+    ? `<span class="cfg-summary">${parts.join(' ｜ ')}</span>`
     : '<span class="placeholder">请选择人群</span>';
 
   const cfg = draft.perChannel[draft.active];
@@ -203,6 +218,16 @@ function renderRows() {
     cv.innerHTML = `<span class="cfg-summary">${summary}</span>`;
   } else {
     cv.innerHTML = '<span class="placeholder">请配置发送内容</span>';
+  }
+
+  // 触达策略（跨通道共享）
+  const sv = document.getElementById('strategyValue');
+  if (draft.strategies.length) {
+    const names = draft.strategies.map(id => strategyById(id)?.name).filter(Boolean);
+    const summary = names.length > 2 ? `${names.slice(0, 2).join(' · ')} 等 ${names.length} 项` : names.join(' · ');
+    sv.innerHTML = `<span class="cfg-summary">${summary}</span>`;
+  } else {
+    sv.innerHTML = '<span class="placeholder">请选择触达策略</span>';
   }
 }
 
@@ -276,38 +301,100 @@ function renderPreview() {
 
 /* ---------------- 右栏配置面板 ---------------- */
 let activePanel = null;
+const CFG_ROWS = ['rowAudience', 'rowTiming', 'rowContent', 'rowStrategy'];
 
 function closePanel() {
   activePanel = null;
   document.getElementById('ntPanel').innerHTML =
     '<div class="panel-empty">点击左侧配置项查看详情</div>';
-  ['rowAudience', 'rowTiming', 'rowContent'].forEach(id =>
-    document.getElementById(id).classList.remove('active'));
+  CFG_ROWS.forEach(id => document.getElementById(id).classList.remove('active'));
 }
 
 function openPanel(type) {
   activePanel = type;
-  ['rowAudience', 'rowTiming', 'rowContent'].forEach(id =>
-    document.getElementById(id).classList.remove('active'));
+  CFG_ROWS.forEach(id => document.getElementById(id).classList.remove('active'));
 
   const panel = document.getElementById('ntPanel');
   if (type === 'audience') {
     document.getElementById('rowAudience').classList.add('active');
     panel.innerHTML = `
       <div class="panel-title">选择人群</div>
-      <div class="check-list">
-        ${AUDIENCES.map(a => `
-          <label class="check-item">
-            <input type="checkbox" value="${a.id}" ${draft.audience.includes(a.id) ? 'checked' : ''}>
-            ${a.name}<span class="count">${a.count.toLocaleString()} 人</span>
-          </label>`).join('')}
+      <p class="panel-hint">星灵标签与上传至少选择 1 项</p>
+
+      <div class="field">
+        <span class="field-label">星灵标签（可多选）</span>
+        <div class="check-list" id="audTagList">
+          ${AUDIENCES.map(a => `
+            <label class="check-item">
+              <input type="checkbox" value="${a.id}" ${draft.audienceTags.includes(a.id) ? 'checked' : ''}>
+              ${a.name}<span class="count">${a.count.toLocaleString()} 人</span>
+            </label>`).join('')}
+        </div>
       </div>
+
+      <div class="field">
+        <span class="field-label">上传</span>
+        <div class="upload-area">
+          <div class="upload-btns">
+            <button class="btn btn-outline btn-sm" id="uploadFileBtn"><i data-lucide="file-up"></i>上传文件</button>
+            <button class="btn btn-outline btn-sm" id="uploadFolderBtn"><i data-lucide="folder-up"></i>上传文件夹</button>
+            <a class="link-btn" id="downloadTplBtn"><i data-lucide="download"></i>模板下载</a>
+          </div>
+          <input type="file" id="uploadFileInput" accept=".csv,.xlsx,.txt" hidden>
+          <input type="file" id="uploadFolderInput" webkitdirectory hidden>
+          <ul class="upload-list" id="uploadList"></ul>
+        </div>
+      </div>
+
       <div class="panel-actions">
         <button class="btn btn-outline" id="panelCancel">取消</button>
         <button class="btn btn-primary" id="panelOk">确认</button>
       </div>`;
+
+    const pendingFiles = [...draft.audienceFiles];
+    const renderUploadList = () => {
+      panel.querySelector('#uploadList').innerHTML = pendingFiles.map((f, i) => `
+        <li><i data-lucide="file-check-2"></i>${f}<button class="icon-btn" data-rm="${i}"><i data-lucide="x"></i></button></li>
+      `).join('');
+      panel.querySelectorAll('[data-rm]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          pendingFiles.splice(Number(btn.dataset.rm), 1);
+          renderUploadList();
+        });
+      });
+      refreshIcons();
+    };
+    renderUploadList();
+
+    const fileInput = panel.querySelector('#uploadFileInput');
+    const folderInput = panel.querySelector('#uploadFolderInput');
+    panel.querySelector('#uploadFileBtn').addEventListener('click', () => fileInput.click());
+    panel.querySelector('#uploadFolderBtn').addEventListener('click', () => folderInput.click());
+    fileInput.addEventListener('change', () => {
+      [...fileInput.files].forEach(f => pendingFiles.push(f.name));
+      fileInput.value = '';
+      renderUploadList();
+    });
+    folderInput.addEventListener('change', () => {
+      if (folderInput.files.length) {
+        const dir = folderInput.files[0].webkitRelativePath.split('/')[0];
+        pendingFiles.push(`${dir}/（${folderInput.files.length} 个文件）`);
+      }
+      folderInput.value = '';
+      renderUploadList();
+    });
+    panel.querySelector('#downloadTplBtn').addEventListener('click', () => {
+      showToast('人群上传模板已开始下载');
+    });
+
     panel.querySelector('#panelOk').addEventListener('click', () => {
-      draft.audience = [...panel.querySelectorAll('input:checked')].map(i => i.value);
+      const tags = [...panel.querySelectorAll('#audTagList input:checked')].map(i => i.value);
+      if (!tags.length && !pendingFiles.length) {
+        showToast('星灵标签与上传至少选择 1 项');
+        return;
+      }
+      draft.audienceTags = tags;
+      draft.audienceFiles = pendingFiles;
       closePanel();
       renderRows();
     });
@@ -371,10 +458,18 @@ function openPanel(type) {
       <div class="field">
         <div class="field-label-row">
           <span class="field-label">内容编辑</span>
-          <select class="select select-sm" id="ntTplSelect">
-            <option value="">选择模板</option>
-            ${CONTENT_TEMPLATES.map(t => `<option value="${t.id}">${t.name}</option>`).join('')}
-          </select>
+          <div class="field-tools">
+            <select class="select select-sm" id="ntTplSelect">
+              <option value="">选择模板</option>
+              ${CONTENT_TEMPLATES.map(t => `<option value="${t.id}">${t.name}</option>`).join('')}
+            </select>
+            <button class="btn btn-outline btn-sm" id="ntSaveTplBtn">保存为模板</button>
+          </div>
+        </div>
+        <div class="tpl-name-row" id="ntTplNameRow" hidden>
+          <input class="input" id="ntTplNameInput" placeholder="请输入模板名称">
+          <button class="btn btn-primary btn-sm" id="ntTplNameOk">保存</button>
+          <button class="btn btn-outline btn-sm" id="ntTplNameCancel">取消</button>
         </div>
         <textarea class="textarea" id="ntContent" rows="8" placeholder="请输入发送内容…">${current}</textarea>
       </div>
@@ -390,11 +485,63 @@ function openPanel(type) {
     });
     // 实时同步预览
     ta.addEventListener('input', () => syncLivePreview(ta.value));
+
+    // 保存为模板：显示模板名称文本框
+    const tplNameRow = panel.querySelector('#ntTplNameRow');
+    panel.querySelector('#ntSaveTplBtn').addEventListener('click', () => {
+      if (!ta.value.trim()) { showToast('请先输入内容再保存为模板'); return; }
+      tplNameRow.hidden = false;
+      panel.querySelector('#ntTplNameInput').focus();
+    });
+    panel.querySelector('#ntTplNameOk').addEventListener('click', () => {
+      const name = panel.querySelector('#ntTplNameInput').value.trim();
+      if (!name) { showToast('请输入模板名称'); return; }
+      tplNameRow.hidden = true;
+      panel.querySelector('#ntTplNameInput').value = '';
+      showToast(`模板「${name}」已保存`);
+    });
+    panel.querySelector('#ntTplNameCancel').addEventListener('click', () => {
+      tplNameRow.hidden = true;
+      panel.querySelector('#ntTplNameInput').value = '';
+    });
+
     panel.querySelector('#panelOk').addEventListener('click', () => {
       draft.perChannel[draft.active].content = ta.value.trim();
       closePanel();
       renderRows();
       renderPreview();
+    });
+  } else if (type === 'strategy') {
+    document.getElementById('rowStrategy').classList.add('active');
+    panel.innerHTML = `
+      <div class="panel-title">触达策略</div>
+      <p class="panel-hint">选择在「触达策略」页面配置的策略规则，可多选</p>
+      <div class="strategy-pick-list">
+        ${STRATEGY_PICK_CATEGORIES.map(catId => {
+          const cat = strategyCategoryById(catId);
+          const items = strategiesByCategory(catId).filter(s => s.status === 'active');
+          if (!items.length) return '';
+          return `
+            <div class="strategy-pick-group">
+              <div class="strategy-pick-cat"><i data-lucide="${cat.icon}"></i>${cat.name}</div>
+              ${items.map(s => `
+                <label class="check-item strategy-pick-item">
+                  <input type="checkbox" value="${s.id}" ${draft.strategies.includes(s.id) ? 'checked' : ''}>
+                  <span class="sp-name">${s.name}</span>
+                  <span class="sp-summary">${s.summary}</span>
+                </label>`).join('')}
+            </div>`;
+        }).join('')}
+      </div>
+      <div class="panel-actions">
+        <button class="btn btn-outline" id="panelCancel">取消</button>
+        <button class="btn btn-primary" id="panelOk">确认</button>
+      </div>`;
+
+    panel.querySelector('#panelOk').addEventListener('click', () => {
+      draft.strategies = [...panel.querySelectorAll('.strategy-pick-list input:checked')].map(i => i.value);
+      closePanel();
+      renderRows();
     });
   }
 
@@ -416,14 +563,16 @@ function syncLivePreview(text) {
 function createTask() {
   const name = document.getElementById('ntName').value.trim();
   if (!name) { showToast('请输入任务名称'); return; }
-  if (!draft.audience.length) { showToast('请选择人群'); return; }
+  if (!document.getElementById('ntProductLine').value) { showToast('请选择产品线'); return; }
+  if (!draft.audienceTags.length && !draft.audienceFiles.length) { showToast('请选择人群（星灵标签或上传至少 1 项）'); return; }
   const missing = draft.channels.find(c => !draft.perChannel[c].timing || !draft.perChannel[c].content);
   if (missing) {
     showToast(`请完成「${CHANNELS[missing].tip}」通道的时机与内容配置`);
     return;
   }
 
-  const total = draft.audience.reduce((sum, id) => sum + AUDIENCES.find(a => a.id === id).count, 0);
+  const total = draft.audienceTags.reduce((sum, id) => sum + AUDIENCES.find(a => a.id === id).count, 0)
+    + draft.audienceFiles.length * 1000;
   draft.channels.forEach(c => {
     tasks.unshift({ name: `${name}`, channel: c, total, sent: 0 });
   });
@@ -448,6 +597,7 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('rowAudience').addEventListener('click', () => openPanel('audience'));
   document.getElementById('rowTiming').addEventListener('click', () => openPanel('timing'));
   document.getElementById('rowContent').addEventListener('click', () => openPanel('content'));
+  document.getElementById('rowStrategy').addEventListener('click', () => openPanel('strategy'));
   document.getElementById('ntName').addEventListener('input', () => {
     if (draft && draft.active === 'email') renderPreview();
   });

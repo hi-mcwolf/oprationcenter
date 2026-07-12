@@ -38,9 +38,6 @@
           <button class="app-item" data-channel="telegram">
             <span class="app-icon"><i data-lucide="send"></i></span><span>Telegram</span>
           </button>
-          <button class="app-item" data-channel="tele">
-            <span class="app-icon"><i data-lucide="headphones"></i></span><span>电销</span>
-          </button>
         </div>
       </div>
     </section>
@@ -85,6 +82,15 @@
           </div>
 
           <div class="field">
+            <span class="field-label">产品线</span>
+            <select class="select" id="ntProductLine">
+              <option value="">请选择产品线</option>
+              <option value="BP-VIP">BP-VIP</option>
+              <option value="BP-CONTENT OPERATION CENTER">BP-CONTENT OPERATION CENTER</option>
+            </select>
+          </div>
+
+          <div class="field">
             <span class="field-label">人群</span>
             <div class="cfg-row" id="rowAudience">
               <div class="cfg-value" id="audienceValue"><span class="placeholder">请选择人群</span></div>
@@ -111,6 +117,14 @@
                 <i data-lucide="chevron-right"></i>
               </div>
             </div>
+
+            <div class="field">
+              <span class="field-label">触达策略</span>
+              <div class="cfg-row" id="rowStrategy">
+                <div class="cfg-value" id="strategyValue"><span class="placeholder">请选择触达策略</span></div>
+                <i data-lucide="chevron-right"></i>
+              </div>
+            </div>
           </div>
         </section>
 
@@ -129,6 +143,7 @@
 
   <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
   <script src="assets/common.js"></script>
+  <script src="assets/strategy-data.js"></script>
   <script src="assets/reach.js"></script>
 </body>
 </html>

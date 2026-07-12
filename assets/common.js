@@ -27,10 +27,11 @@ const NAV_ITEMS = [
     key: 'reach', label: '触达', icon: 'send',
     children: [
       { key: 'reach-task', label: '触达任务', href: 'reach.html' },
-      { key: 'reach-template', label: '模板管理', href: 'javascript:;' },
-      { key: 'reach-channel', label: '通道管理', href: 'javascript:;' },
+      { key: 'reach-task-records', label: '任务记录', href: 'task-records.html' },
+      { key: 'reach-send-records', label: '发送记录', href: 'send-records.html' },
+      { key: 'reach-template', label: '模板管理', href: 'templates.html' },
+      { key: 'reach-strategy', label: '触达策略', href: 'strategy.html' },
       { key: 'reach-stats', label: '数据统计', href: 'stats.html' },
-      { key: 'reach-settings', label: '触达设置', href: 'javascript:;' },
     ],
   },
   {

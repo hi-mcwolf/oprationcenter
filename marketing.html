@@ -140,7 +140,14 @@
                 <button class="btn btn-outline btn-sm" id="saveTplBtn">保存为模板</button>
               </div>
             </div>
-            <textarea class="textarea" id="contentText" rows="5" placeholder="请输入触达文案内容…"></textarea>
+            <div class="tpl-name-row" id="tplNameRow" hidden>
+              <input class="input" id="tplNameInput" placeholder="请输入模板名称">
+              <button class="btn btn-primary btn-sm" id="tplNameOk">保存</button>
+              <button class="btn btn-outline btn-sm" id="tplNameCancel">取消</button>
+            </div>
+            <div class="tabs content-tabs" id="contentTabs"></div>
+            <p class="content-tabs-empty" id="contentTabsEmpty">请先在上方选择触达通道，再为每个通道单独配置内容</p>
+            <textarea class="textarea" id="contentText" rows="5" placeholder="请输入触达文案内容…" hidden></textarea>
           </div>
 
           <div class="field">
@@ -165,6 +172,13 @@
             </div>
           </div>
         </section>
+
+        <!-- 触达策略配置 -->
+        <section class="card">
+          <h4 class="card-title">触达策略配置</h4>
+          <p class="card-subtitle">选择本次触达需要应用的策略规则，策略在「触达 → 触达策略」中统一维护</p>
+          <div class="strategy-pick-list" id="strategyPickList"></div>
+        </section>
       </div>
 
       <footer class="drawer-footer">
@@ -176,6 +190,7 @@
 
   <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
   <script src="assets/common.js"></script>
+  <script src="assets/strategy-data.js"></script>
   <script src="assets/marketing.js"></script>
 </body>
 </html>
