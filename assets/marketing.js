@@ -59,25 +59,15 @@ function renderContentTabs() {
 }
 
 /* 触达策略配置区（数据来自 strategy-data.js） */
-function renderStrategyPicker() {
-  const host = document.getElementById('strategyPickList');
-  const categories = ['frequency', 'dnd', 'dedup', 'retry', 'channel-route'];
-  host.innerHTML = categories.map(catId => {
-    const cat = strategyCategoryById(catId);
-    const items = strategiesByCategory(catId).filter(s => s.status === 'active');
-    if (!items.length) return '';
-    return `
-      <div class="strategy-pick-group">
-        <div class="strategy-pick-cat"><i data-lucide="${cat.icon}"></i>${cat.name}</div>
-        ${items.map(s => `
-          <label class="check-item strategy-pick-item">
-            <input type="checkbox" value="${s.id}">
-            <span class="sp-name">${s.name}</span>
-            <span class="sp-summary">${s.summary}</span>
-          </label>`).join('')}
-      </div>`;
-  }).join('');
-  refreshIcons();
+const MARKETING_STRATEGY_CATEGORIES = ['frequency', 'dnd', 'dedup', 'retry', 'channel-route'];
+let strategyMultiSelectGroup = null;
+
+function initStrategyMultiSelect() {
+  strategyMultiSelectGroup?.destroy();
+  strategyMultiSelectGroup = createStrategyMultiSelectGroup({
+    container: document.getElementById('strategyMultiSelect'),
+    categoryIds: MARKETING_STRATEGY_CATEGORIES,
+  });
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -161,7 +151,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // 触达策略配置
-  renderStrategyPicker();
+  initStrategyMultiSelect();
 
   // 确认
   document.getElementById('confirmReach').addEventListener('click', () => {

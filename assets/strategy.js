@@ -182,6 +182,7 @@ function renderMain() {
   const host = document.getElementById('strategyMain');
   host.innerHTML = activeCategory === 'overview' ? renderOverview() : renderCategoryList(activeCategory);
   bindMainEvents(host);
+  enhanceSelects(host);
   refreshIcons();
 }
 

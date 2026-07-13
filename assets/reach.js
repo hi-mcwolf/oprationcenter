@@ -301,9 +301,12 @@ function renderPreview() {
 
 /* ---------------- 右栏配置面板 ---------------- */
 let activePanel = null;
+let panelStrategyMselGroup = null;
 const CFG_ROWS = ['rowAudience', 'rowTiming', 'rowContent', 'rowStrategy'];
 
 function closePanel() {
+  panelStrategyMselGroup?.destroy();
+  panelStrategyMselGroup = null;
   activePanel = null;
   document.getElementById('ntPanel').innerHTML =
     '<div class="panel-empty">点击左侧配置项查看详情</div>';
@@ -311,6 +314,8 @@ function closePanel() {
 }
 
 function openPanel(type) {
+  panelStrategyMselGroup?.destroy();
+  panelStrategyMselGroup = null;
   activePanel = type;
   CFG_ROWS.forEach(id => document.getElementById(id).classList.remove('active'));
 
@@ -515,31 +520,21 @@ function openPanel(type) {
     document.getElementById('rowStrategy').classList.add('active');
     panel.innerHTML = `
       <div class="panel-title">触达策略</div>
-      <p class="panel-hint">选择在「触达策略」页面配置的策略规则，可多选</p>
-      <div class="strategy-pick-list">
-        ${STRATEGY_PICK_CATEGORIES.map(catId => {
-          const cat = strategyCategoryById(catId);
-          const items = strategiesByCategory(catId).filter(s => s.status === 'active');
-          if (!items.length) return '';
-          return `
-            <div class="strategy-pick-group">
-              <div class="strategy-pick-cat"><i data-lucide="${cat.icon}"></i>${cat.name}</div>
-              ${items.map(s => `
-                <label class="check-item strategy-pick-item">
-                  <input type="checkbox" value="${s.id}" ${draft.strategies.includes(s.id) ? 'checked' : ''}>
-                  <span class="sp-name">${s.name}</span>
-                  <span class="sp-summary">${s.summary}</span>
-                </label>`).join('')}
-            </div>`;
-        }).join('')}
-      </div>
+      <p class="panel-hint">选择在「触达策略」页面配置的策略规则，每个类型可多选</p>
+      <div id="panelStrategyMsel"></div>
       <div class="panel-actions">
         <button class="btn btn-outline" id="panelCancel">取消</button>
         <button class="btn btn-primary" id="panelOk">确认</button>
       </div>`;
 
+    panelStrategyMselGroup = createStrategyMultiSelectGroup({
+      container: panel.querySelector('#panelStrategyMsel'),
+      categoryIds: STRATEGY_PICK_CATEGORIES,
+      selected: draft.strategies,
+    });
+
     panel.querySelector('#panelOk').addEventListener('click', () => {
-      draft.strategies = [...panel.querySelectorAll('.strategy-pick-list input:checked')].map(i => i.value);
+      draft.strategies = panelStrategyMselGroup.getValue();
       closePanel();
       renderRows();
     });
@@ -549,6 +544,7 @@ function openPanel(type) {
     closePanel();
     renderPreview();
   });
+  enhanceSelects(panel);
   refreshIcons();
 }
 

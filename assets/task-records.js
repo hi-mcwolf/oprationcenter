@@ -403,6 +403,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const fStrategy = document.getElementById('fStrategy');
   fStrategy.innerHTML = '<option value="">全部策略</option>' +
     REACH_STRATEGIES.map(s => `<option value="${s.name}">${s.name}</option>`).join('');
+  fStrategy._ssel?.refresh();
 
   // 时间范围切换
   document.querySelectorAll('#timeRange .seg-btn').forEach(btn => {

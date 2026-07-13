@@ -648,6 +648,7 @@ function renderDrawerBody(tpl, mode, scrollToVersions) {
   `;
 
   bindDrawerFormEvents(tpl, editable);
+  enhanceSelects(document.getElementById('tplDrawerForm'));
   renderPreview(tpl);
   if (scrollToVersions) {
     setTimeout(() => document.querySelector('.collapse-section:last-child')?.scrollIntoView({ behavior: 'smooth' }), 300);
