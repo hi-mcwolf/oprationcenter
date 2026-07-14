@@ -202,7 +202,6 @@ function renderTopList() {
       <span class="top-meta">
         <span>发送 ${fmt(t.send)}</span>
         <span>点击率 ${t.ctr}%</span>
-        <span>转化率 ${t.cvr}%</span>
       </span>
       <span class="top-bar">
         <span class="progress"><span class="progress-inner" style="width:${(t.ctr / max * 100).toFixed(0)}%"></span></span>
@@ -253,7 +252,6 @@ function renderTable() {
         : '<span class="cell-muted">-</span>'}</td>
       <td>
         <button class="link-btn" data-act="detail">查看详情</button>
-        <button class="link-btn" data-act="log">查看日志</button>
       </td>
     </tr>`).join('');
   renderPagination();
@@ -347,7 +345,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const btn = e.target.closest('.link-btn');
     if (!btn) return;
     const name = btn.closest('tr').children[0].textContent;
-    showToast(`${btn.dataset.act === 'detail' ? '查看详情' : '查看日志'}：${name}（原型演示）`);
+    showToast(`查看详情：${name}（原型演示）`);
   });
 
   rerenderAll();

@@ -45,8 +45,8 @@
                 </div>
               </div>
               <div class="filter-item">
-                <span class="filter-label">任务名称</span>
-                <input class="input" id="fName" placeholder="输入任务名称搜索">
+                <span class="filter-label">任务名称/ID</span>
+                <input class="input" id="fName" placeholder="输入任务名称或 ID 搜索">
               </div>
               <div class="filter-item">
                 <span class="filter-label">任务类型</span>
@@ -54,6 +54,10 @@
                   <option value="">全部</option><option>营销活动</option><option>生命周期</option>
                   <option>召回</option><option>促活</option><option>通知</option>
                 </select>
+              </div>
+              <div class="filter-item filter-item-wide">
+                <span class="filter-label">产品线</span>
+                <div id="fProductLine"></div>
               </div>
               <div class="filter-item">
                 <span class="filter-label">通道</span>
@@ -66,7 +70,7 @@
               <div class="filter-item">
                 <span class="filter-label">状态</span>
                 <select class="select" id="fStatus">
-                  <option value="">全部</option><option value="draft">草稿</option><option value="pending">待发送</option>
+                  <option value="">全部</option><option value="draft">草稿</option><option value="reviewing">审核中</option><option value="pending">待发送</option>
                   <option value="running">执行中</option><option value="done">已完成</option>
                   <option value="paused">已暂停</option><option value="failed">失败</option>
                 </select>
@@ -106,7 +110,7 @@
               <table class="table stats-table records-table">
                 <thead>
                   <tr>
-                    <th class="col-name">任务名称</th><th>任务类型</th><th>目标人群</th><th>通道</th>
+                    <th class="col-name">任务名称</th><th>任务 ID</th><th>任务类型</th><th>目标人群</th><th>产品线</th><th>通道</th>
                     <th>发送时机</th><th>触达策略</th><th>当前状态</th><th>创建人</th>
                     <th>创建时间</th><th>最近更新时间</th>
                     <th class="num">发送量</th><th class="num">送达率</th>
@@ -145,7 +149,10 @@
 
   <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
   <script src="assets/common.js"></script>
+  <script src="assets/content-editor.js"></script>
+  <script src="assets/reach-config.js"></script>
   <script src="assets/search-select.js"></script>
+  <script src="assets/search-multi-select.js"></script>
   <script src="assets/strategy-data.js"></script>
   <script src="assets/task-records.js"></script>
 </body>

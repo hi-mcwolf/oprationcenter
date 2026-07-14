@@ -38,17 +38,39 @@
           <button class="app-item" data-channel="telegram">
             <span class="app-icon"><i data-lucide="send"></i></span><span>Telegram</span>
           </button>
+          <button class="app-item" data-channel="messenger">
+            <span class="app-icon"><i data-lucide="message-circle"></i></span><span>Messenger</span>
+          </button>
         </div>
       </div>
     </section>
 
-    <!-- 右侧消息/列表区 -->
+    <!-- 右侧 AI 对话区 -->
     <section class="list-pane">
       <div class="welcome-block">
         <h2 id="greeting"></h2>
         <p id="greetSub"></p>
       </div>
-      <div class="task-list" id="taskList"></div>
+      <div class="ai-chat-panel">
+        <div class="ai-chat-messages" id="aiChatMessages">
+          <div class="ai-msg ai-msg-bot">
+            <div class="ai-msg-label"><i data-lucide="sparkles"></i> AI 助手</div>
+            您好！我是触达 AI 助手，可帮您分析任务效果、推荐通道与文案。功能开发中，敬请期待。
+          </div>
+          <div class="ai-msg ai-msg-user">
+            <div class="ai-msg-label">marvin@</div>
+            帮我看看当前执行中的任务情况
+          </div>
+          <div class="ai-msg ai-msg-bot">
+            <div class="ai-msg-label"><i data-lucide="sparkles"></i> AI 助手</div>
+            您当前共有 2 个任务在执行：世界杯竞猜预热短信（SMS，进度 75%）、新用户充值召回邮件（邮件，进度 38%）。
+          </div>
+        </div>
+        <div class="ai-chat-input-bar">
+          <textarea class="textarea" rows="2" readonly placeholder="AI功能开发中，敬请期待"></textarea>
+          <button type="button" class="ai-chat-send" disabled aria-label="发送"><i data-lucide="send"></i></button>
+        </div>
+      </div>
     </section>
       </div>
       </div>
@@ -91,6 +113,14 @@
           </div>
 
           <div class="field">
+            <span class="field-label">任务类型</span>
+            <div class="radio-group" id="ntTaskType">
+              <label><input type="radio" name="taskType" value="manual" checked>手动发送</label>
+              <label><input type="radio" name="taskType" value="api">API调用</label>
+            </div>
+          </div>
+
+          <div class="field">
             <span class="field-label">人群</span>
             <div class="cfg-row" id="rowAudience">
               <div class="cfg-value" id="audienceValue"><span class="placeholder">请选择人群</span></div>
@@ -118,7 +148,7 @@
               </div>
             </div>
 
-            <div class="field">
+            <div class="field" hidden>
               <span class="field-label">触达策略</span>
               <div class="cfg-row" id="rowStrategy">
                 <div class="cfg-value" id="strategyValue"><span class="placeholder">请选择触达策略</span></div>
@@ -136,13 +166,15 @@
 
       <footer class="drawer-footer">
         <button class="btn btn-outline" data-close>取消</button>
-        <button class="btn btn-primary" id="createTaskBtn">创建任务</button>
+        <button class="btn btn-primary" id="createTaskBtn">提交审批</button>
       </footer>
     </aside>
   </div>
 
   <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
   <script src="assets/common.js"></script>
+  <script src="assets/content-editor.js"></script>
+  <script src="assets/reach-config.js"></script>
   <script src="assets/search-select.js"></script>
   <script src="assets/strategy-data.js"></script>
   <script src="assets/search-multi-select.js"></script>

@@ -10,7 +10,7 @@ function renderNav() {
     <button class="strategy-nav-item${activeCategory === 'overview' ? ' active' : ''}" data-cat="overview">
       <i data-lucide="layout-dashboard"></i>策略总览
     </button>`;
-  host.innerHTML = overviewItem + STRATEGY_CATEGORIES.map(c => `
+  host.innerHTML = overviewItem + visibleStrategyCategories().map(c => `
     <button class="strategy-nav-item${activeCategory === c.id ? ' active' : ''}" data-cat="${c.id}">
       <i data-lucide="${c.icon}"></i>${c.name}
       ${c.badge ? `<span class="nav-badge nav-badge-${c.badge.type}">${c.badge.text}</span>` : ''}
@@ -28,14 +28,16 @@ function renderNav() {
 
 /* ---------------- 中间：总览 ---------------- */
 function renderOverview() {
-  const active = REACH_STRATEGIES.filter(s => s.status === 'active');
-  const recent = [...REACH_STRATEGIES]
+  const strategies = visibleReachStrategies();
+  const categories = visibleStrategyCategories();
+  const active = strategies.filter(s => s.status === 'active');
+  const recent = [...strategies]
     .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt)).slice(0, 6);
-  const top5 = [...REACH_STRATEGIES].sort((a, b) => b.hits - a.hits).slice(0, 5);
-  const newIn7d = REACH_STRATEGIES.filter(s => s.createdAt >= '2026-07-06').length;
-  const warnings = STRATEGY_CATEGORIES.filter(c => c.badge && c.badge.type === 'warning').length;
+  const top5 = [...strategies].sort((a, b) => b.hits - a.hits).slice(0, 5);
+  const newIn7d = strategies.filter(s => s.createdAt >= '2026-07-06').length;
+  const warnings = categories.filter(c => c.badge && c.badge.type === 'warning').length;
 
-  const counts = STRATEGY_CATEGORIES.map(c => ({
+  const counts = categories.map(c => ({
     name: c.name,
     count: strategiesByCategory(c.id).length,
   }));
@@ -51,7 +53,7 @@ function renderOverview() {
 
     <section class="kpi-grid kpi-grid-4">
       <div class="kpi-card"><div class="kpi-title">生效中策略总数</div><div class="kpi-body"><span class="kpi-value kpi-green">${active.length}</span></div></div>
-      <div class="kpi-card"><div class="kpi-title">策略分类数</div><div class="kpi-body"><span class="kpi-value">${STRATEGY_CATEGORIES.length}</span></div></div>
+      <div class="kpi-card"><div class="kpi-title">策略分类数</div><div class="kpi-body"><span class="kpi-value">${categories.length}</span></div></div>
       <div class="kpi-card"><div class="kpi-title">最近7天新增策略</div><div class="kpi-body"><span class="kpi-value kpi-blue">${newIn7d}</span></div></div>
       <div class="kpi-card"><div class="kpi-title">当前预警策略</div><div class="kpi-body"><span class="kpi-value kpi-red">${warnings}</span></div></div>
     </section>
@@ -61,7 +63,7 @@ function renderOverview() {
         <h4 class="card-title">各分类策略数量</h4>
         <div class="bar-list">
           ${counts.map(c => `
-            <div class="bar-row" data-goto="${STRATEGY_CATEGORIES.find(x => x.name === c.name).id}">
+            <div class="bar-row" data-goto="${categories.find(x => x.name === c.name)?.id || ''}">
               <span class="bar-label">${c.name}</span>
               <span class="bar-track"><span class="bar-fill" style="width:${Math.round(c.count / maxCount * 100)}%"></span></span>
               <span class="bar-count">${c.count}</span>
@@ -98,6 +100,10 @@ function renderOverview() {
 
 /* ---------------- 中间：分类列表 ---------------- */
 function renderCategoryList(catId) {
+  if (!VISIBLE_STRATEGY_CATEGORY_IDS.includes(catId)) {
+    activeCategory = 'overview';
+    return renderOverview();
+  }
   const cat = strategyCategoryById(catId);
   const items = strategiesByCategory(catId);
 

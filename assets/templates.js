@@ -1,11 +1,9 @@
 /* 模板管理页：列表 + 筛选 + 详情/编辑/新建抽屉 */
 
 const TPL_STATUS = {
-  draft:     { label: '草稿',     cls: 'tag-gray' },
-  reviewing: { label: '审核中',   cls: 'tag-orange' },
-  active:    { label: '已生效',   cls: 'tag-success' },
-  disabled:  { label: '已停用',   cls: 'tag-gray-outline' },
-  rejected:  { label: '审核驳回', cls: 'tag-danger' },
+  draft:    { label: '草稿',     cls: 'tag-gray' },
+  active:   { label: '已生效',   cls: 'tag-success' },
+  disabled: { label: '已停用',   cls: 'tag-gray-outline' },
 };
 
 const CHANNELS = ['SMS', '邮件', 'Push', 'Inbox', 'IM', 'Bot', 'Viber', 'Telegram', '电销'];
@@ -252,6 +250,10 @@ let TEMPLATE_RECORDS = [
   },
 ];
 
+TEMPLATE_RECORDS.forEach(t => {
+  if (t.status === 'reviewing' || t.status === 'rejected') t.status = 'draft';
+});
+
 /* ---------------- 状态 ---------------- */
 const PAGE_SIZE = 8;
 let currentPage = 1;
@@ -266,12 +268,11 @@ let lastFocusedInput = null;
 function renderKpis() {
   const total = TEMPLATE_RECORDS.length;
   const active = TEMPLATE_RECORDS.filter(t => t.status === 'active').length;
-  const reviewing = TEMPLATE_RECORDS.filter(t => t.status === 'reviewing').length;
   const disabled = TEMPLATE_RECORDS.filter(t => t.status === 'disabled').length;
   document.getElementById('kpiGrid').innerHTML = [
     { title: '模板总数', value: total, cls: '' },
     { title: '生效中模板数', value: active, cls: 'kpi-green' },
-    { title: '审核中模板数', value: reviewing, cls: 'kpi-orange' },
+    { title: '草稿模板数', value: TEMPLATE_RECORDS.filter(t => t.status === 'draft').length, cls: 'kpi-blue' },
     { title: '停用模板数', value: disabled, cls: '' },
   ].map(k => `
     <div class="kpi-card">
@@ -287,19 +288,16 @@ function applyFilters() {
   const type = document.getElementById('fType').value;
   const channel = document.getElementById('fChannel').value;
   const status = document.getElementById('fStatus').value;
-  const lang = document.getElementById('fLang').value;
   const biz = document.getElementById('fBiz').value;
   const creator = document.getElementById('fCreator').value;
 
   filtered = TEMPLATE_RECORDS.filter(t => {
-    if (activeCat === 'reviewing' && t.status !== 'reviewing') return false;
-    if (activeCat !== 'all' && activeCat !== 'reviewing' && t.channel !== activeCat) return false;
+    if (activeCat !== 'all' && t.channel !== activeCat) return false;
     return (!name || t.name.toLowerCase().includes(name)) &&
       (!code || t.code.toLowerCase().includes(code)) &&
       (!type || t.type === type) &&
       (!channel || t.channel === channel) &&
       (!status || t.status === status) &&
-      (!lang || t.langs === lang) &&
       (!biz || t.bizLine === biz) &&
       (!creator || t.creator === creator);
   });
@@ -311,48 +309,47 @@ function resetFilters() {
   activeCat = 'all';
   document.querySelectorAll('#catChips .chip').forEach(c => c.classList.toggle('selected', c.dataset.cat === 'all'));
   ['fName', 'fCode'].forEach(id => document.getElementById(id).value = '');
-  ['fType', 'fChannel', 'fStatus', 'fLang', 'fBiz', 'fCreator'].forEach(id => document.getElementById(id).value = '');
+  ['fType', 'fChannel', 'fStatus', 'fBiz', 'fCreator'].forEach(id => document.getElementById(id).value = '');
   applyFilters();
 }
 
 /* ---------------- 表格与分页 ---------------- */
 function renderTable() {
+  closeAllMoreMenus();
   const tbody = document.getElementById('tplTableBody');
   const start = (currentPage - 1) * PAGE_SIZE;
   const rows = filtered.slice(start, start + PAGE_SIZE);
 
   if (!rows.length) {
-    tbody.innerHTML = `<tr><td colspan="11" class="cell-empty">暂无符合条件的模板</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="10" class="cell-empty">暂无符合条件的模板</td></tr>`;
   } else {
     tbody.innerHTML = rows.map(t => {
       const st = TPL_STATUS[t.status];
-      const toggleBtn = t.status === 'active'
-        ? `<button class="link-btn" data-disable="${t.id}">停用</button>`
+      const toggleItem = t.status === 'active'
+        ? `<button class="more-item" data-act="disable" data-id="${t.id}">停用</button>`
         : t.status === 'disabled'
-          ? `<button class="link-btn" data-enable="${t.id}">启用</button>`
+          ? `<button class="more-item" data-act="enable" data-id="${t.id}">启用</button>`
           : '';
       return `
         <tr>
           <td class="col-name"><span class="cell-ellipsis" title="${t.name}">${t.name}</span></td>
           <td class="col-name"><span class="cell-ellipsis" title="${t.code}">${t.code}</span></td>
           <td>${t.type}</td>
-          <td><span class="tag tag-primary">${t.channel}</span></td>
-          <td>${t.langs}</td>
-          <td class="num"><button class="link-btn var-count-btn" data-vars="${t.id}">${t.variables.length}</button></td>
           <td>${t.bizLine}</td>
+          <td><span class="tag tag-primary">${t.channel}</span></td>
+          <td class="num"><button class="link-btn var-count-btn" data-vars="${t.id}">${t.variables.length}</button></td>
           <td><span class="tag ${st.cls}">${st.label}</span></td>
           <td class="cell-muted">${t.updatedAt}</td>
           <td>${t.updatedBy}</td>
           <td class="col-ops">
             <button class="link-btn" data-view="${t.id}">查看详情</button>
             <button class="link-btn" data-edit="${t.id}">编辑</button>
-            <button class="link-btn" data-copy="${t.id}">复制</button>
-            ${toggleBtn}
             <span class="more-wrap">
               <button class="link-btn" data-more="${t.id}">更多<i data-lucide="chevron-down"></i></button>
               <span class="more-menu" hidden>
+                <button class="more-item" data-act="copy" data-id="${t.id}">复制</button>
+                ${toggleItem}
                 <button class="more-item" data-act="versions" data-id="${t.id}">查看版本</button>
-                <button class="more-item" data-act="review" data-id="${t.id}">提交审核</button>
                 <button class="more-item more-danger" data-act="delete" data-id="${t.id}">删除</button>
               </span>
             </span>
@@ -384,23 +381,16 @@ function bindRowActions() {
   const tbody = document.getElementById('tplTableBody');
   tbody.querySelectorAll('[data-view]').forEach(b => b.addEventListener('click', () => openTplDrawer('view', b.dataset.view)));
   tbody.querySelectorAll('[data-edit]').forEach(b => b.addEventListener('click', () => openTplDrawer('edit', b.dataset.edit)));
-  tbody.querySelectorAll('[data-copy]').forEach(b => b.addEventListener('click', () => copyTemplate(b.dataset.copy)));
-  tbody.querySelectorAll('[data-disable]').forEach(b => b.addEventListener('click', () => toggleStatus(b.dataset.disable, 'disabled')));
-  tbody.querySelectorAll('[data-enable]').forEach(b => b.addEventListener('click', () => toggleStatus(b.dataset.enable, 'active')));
 
-  tbody.querySelectorAll('[data-more]').forEach(btn => btn.addEventListener('click', e => {
-    e.stopPropagation();
-    const menu = btn.parentElement.querySelector('.more-menu');
-    const wasHidden = menu.hidden;
-    document.querySelectorAll('.more-menu').forEach(m => m.hidden = true);
-    menu.hidden = !wasHidden;
-  }));
+  bindMoreMenus(tbody);
 
   tbody.querySelectorAll('.more-item').forEach(item => item.addEventListener('click', () => {
     const t = TEMPLATE_RECORDS.find(x => x.id === item.dataset.id);
-    item.closest('.more-menu').hidden = true;
+    closeAllMoreMenus();
+    if (item.dataset.act === 'copy') copyTemplate(t.id);
+    if (item.dataset.act === 'disable') toggleStatus(t.id, 'disabled');
+    if (item.dataset.act === 'enable') toggleStatus(t.id, 'active');
     if (item.dataset.act === 'versions') openTplDrawer('view', t.id, true);
-    if (item.dataset.act === 'review') submitReview(t.id);
     if (item.dataset.act === 'delete') deleteTemplate(t.id);
   }));
 
@@ -428,15 +418,6 @@ function toggleStatus(id, status) {
   const t = TEMPLATE_RECORDS.find(x => x.id === id);
   t.status = status;
   showToast(`模板「${t.name}」已${status === 'active' ? '启用' : '停用'}`);
-  renderKpis(); renderTable();
-}
-
-function submitReview(id) {
-  const t = TEMPLATE_RECORDS.find(x => x.id === id);
-  if (t.status !== 'draft' && t.status !== 'rejected') { showToast('仅草稿或驳回状态可提交审核'); return; }
-  t.status = 'reviewing';
-  t.audit.status = '审核中';
-  showToast(`模板「${t.name}」已提交审核`);
   renderKpis(); renderTable();
 }
 
@@ -523,8 +504,7 @@ function contentFieldsHtml(tpl, editable) {
   if (ch === 'SMS') {
     return `
       <div class="field"><span class="field-label">文本内容</span>
-        <textarea class="textarea tpl-field" data-key="text" rows="5" ${dis}>${c.text || ''}</textarea>
-        <div class="char-count">字数：<span id="smsCharCount">${(c.text || '').length}</span> / 160</div>
+        <textarea class="textarea tpl-field" data-key="text" data-char-max="160" rows="5" ${dis}>${c.text || ''}</textarea>
       </div>
       <div class="field"><label class="check-item"><input type="checkbox" class="tpl-field" data-key="hasShortLink" ${c.hasShortLink ? 'checked' : ''} ${dis}> 包含短链</label></div>
       <div class="field"><span class="field-label">签名配置</span>
@@ -602,7 +582,7 @@ function renderDrawerBody(tpl, mode, scrollToVersions) {
           </select></div>
       </div>
       <div class="field-row-2">
-        <div class="field"><span class="field-label">所属业务线</span>
+        <div class="field"><span class="field-label">产品线</span>
           <select class="select" id="fTplBiz">
             ${['BingoPlus','ArenaPlus','BP-VIP'].map(b =>
               `<option${b === tpl.bizLine ? ' selected' : ''}>${b}</option>`).join('')}
@@ -615,19 +595,11 @@ function renderDrawerBody(tpl, mode, scrollToVersions) {
         <div class="desc-item"><span class="desc-label">模板编码</span><span>${tpl.code}</span></div>
         <div class="desc-item"><span class="desc-label">模板类型</span><span>${tpl.type}</span></div>
         <div class="desc-item"><span class="desc-label">通道类型</span><span><span class="tag tag-primary">${tpl.channel}</span></span></div>
-        <div class="desc-item"><span class="desc-label">所属业务线</span><span>${tpl.bizLine}</span></div>
+        <div class="desc-item"><span class="desc-label">产品线</span><span>${tpl.bizLine}</span></div>
         <div class="desc-item"><span class="desc-label">当前状态</span><span class="tag ${st.cls}">${st.label}</span></div>
         <div class="desc-item"><span class="desc-label">创建人 / 更新时间</span><span>${tpl.creator} · ${tpl.updatedAt}</span></div>
       </div>`;
   }
-
-  const auditBody = `
-    <div class="desc-list">
-      <div class="desc-item"><span class="desc-label">当前审核状态</span><span>${tpl.audit.status}</span></div>
-      <div class="desc-item"><span class="desc-label">审核人</span><span>${tpl.audit.reviewer || '-'}</span></div>
-      <div class="desc-item"><span class="desc-label">审核时间</span><span>${tpl.audit.time || '-'}</span></div>
-      ${tpl.audit.rejectReason ? `<div class="reject-banner"><i data-lucide="alert-circle"></i>${tpl.audit.rejectReason}</div>` : ''}
-    </div>`;
 
   const versionBody = `<ul class="version-list">${tpl.versions.map(v =>
     `<li><span class="ver-no">${v.ver}</span><span class="ver-summary">${v.summary}</span><span class="ver-meta">${v.user} · ${v.time}</span></li>`
@@ -643,15 +615,16 @@ function renderDrawerBody(tpl, mode, scrollToVersions) {
     <section class="card detail-group" id="sectionVars">
       <h4 class="card-title">变量配置</h4>${variablesHtml(tpl, editable)}
     </section>
-    ${collapseHtml('审核信息', auditBody, tpl.status === 'rejected')}
-    ${collapseHtml('版本记录', versionBody, !!scrollToVersions)}
+    <section class="card detail-group" id="sectionVersions">
+      <h4 class="card-title">版本记录</h4>${versionBody}
+    </section>
   `;
 
   bindDrawerFormEvents(tpl, editable);
   enhanceSelects(document.getElementById('tplDrawerForm'));
   renderPreview(tpl);
   if (scrollToVersions) {
-    setTimeout(() => document.querySelector('.collapse-section:last-child')?.scrollIntoView({ behavior: 'smooth' }), 300);
+    setTimeout(() => document.getElementById('sectionVersions')?.scrollIntoView({ behavior: 'smooth' }), 300);
   }
   refreshIcons();
 }
@@ -660,11 +633,12 @@ function bindDrawerFormEvents(tpl, editable) {
   const form = document.getElementById('tplDrawerForm');
 
   form.querySelectorAll('.collapse-head').forEach(head => {
-    head.addEventListener('click', () => head.closest('.collapse-section').classList.toggle('open'));
+    head.addEventListener('click', () => head.closest('.collapse-section')?.classList.toggle('open'));
   });
 
   if (!editable) {
     form.querySelectorAll('.var-insert').forEach(btn => btn.addEventListener('click', () => showToast(`变量 {{${btn.dataset.var}}} 可在编辑模式插入`)));
+    initCharCounters(form);
     return;
   }
 
@@ -674,8 +648,6 @@ function bindDrawerFormEvents(tpl, editable) {
       if (el.type === 'checkbox') tpl.content[key] = el.checked;
       else tpl.content[key] = el.value;
     });
-    const cc = form.querySelector('#smsCharCount');
-    if (cc && tpl.channel === 'SMS') cc.textContent = (tpl.content.text || '').length;
     renderPreview(tpl);
   };
 
@@ -730,6 +702,8 @@ function bindDrawerFormEvents(tpl, editable) {
       showToast(`已复制 ${token}，请先聚焦内容输入框`);
     }
   }
+
+  initCharCounters(form);
 }
 
 function defaultContent(channel) {
@@ -761,7 +735,7 @@ function renderDrawerFooter(mode) {
     footer.innerHTML = `
       <button class="btn btn-outline" data-close>取消</button>
       <button class="btn btn-outline" id="footerDraftBtn">保存草稿</button>
-      <button class="btn btn-primary" id="footerSaveBtn">提交审核</button>`;
+      <button class="btn btn-primary" id="footerSaveBtn">提交</button>`;
     footer.querySelector('#footerDraftBtn').addEventListener('click', () => saveTemplate(false));
     footer.querySelector('#footerSaveBtn').addEventListener('click', () => saveTemplate(true));
   }
@@ -783,9 +757,8 @@ function saveTemplate(submitReview) {
   tpl.updatedBy = 'marvin@';
 
   if (submitReview) {
-    tpl.status = 'reviewing';
-    tpl.audit.status = '审核中';
-    showToast(`模板「${tpl.name}」已提交审核`);
+    tpl.status = 'active';
+    showToast(`模板「${tpl.name}」已提交`);
   } else {
     tpl.status = 'draft';
     showToast(`模板「${tpl.name}」已保存为草稿`);
@@ -794,12 +767,12 @@ function saveTemplate(submitReview) {
   if (drawerMode === 'create') {
     tpl.id = 'tpl-' + Date.now();
     tpl.createdAt = now;
-    tpl.versions.push({ ver: 'v0.1', time: now, user: 'marvin@', summary: submitReview ? '创建并提交审核' : '草稿创建' });
+    tpl.versions.push({ ver: 'v0.1', time: now, user: 'marvin@', summary: submitReview ? '创建并提交' : '草稿创建' });
     TEMPLATE_RECORDS.unshift(tpl);
   } else {
     const idx = TEMPLATE_RECORDS.findIndex(x => x.id === tpl.id);
     if (idx >= 0) TEMPLATE_RECORDS[idx] = tpl;
-    tpl.versions.unshift({ ver: 'v' + (tpl.versions.length + 1) + '.0', time: now, user: 'marvin@', summary: submitReview ? '提交审核' : '保存草稿' });
+    tpl.versions.unshift({ ver: 'v' + (tpl.versions.length + 1) + '.0', time: now, user: 'marvin@', summary: submitReview ? '提交' : '保存草稿' });
   }
 
   closeDrawer('tplDrawer');
@@ -850,11 +823,12 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('queryBtn').addEventListener('click', applyFilters);
   document.getElementById('resetBtn').addEventListener('click', resetFilters);
   ['fName', 'fCode'].forEach(id => document.getElementById(id).addEventListener('keydown', e => { if (e.key === 'Enter') applyFilters(); }));
-  document.getElementById('exportBtn').addEventListener('click', () => showToast('模板列表导出中…'));
-  document.getElementById('batchBtn').addEventListener('click', () => showToast('批量操作（原型演示）'));
   document.getElementById('newTplBtn').addEventListener('click', () => openTplDrawer('create'));
 
-  document.addEventListener('click', () => document.querySelectorAll('.more-menu').forEach(m => m.hidden = true));
+  document.addEventListener('click', () => closeAllMoreMenus());
+  document.querySelectorAll('.table-scroll').forEach(el => {
+    el.addEventListener('scroll', closeAllMoreMenus, { passive: true });
+  });
 
   renderKpis();
   applyFilters();

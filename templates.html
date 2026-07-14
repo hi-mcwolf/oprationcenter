@@ -22,8 +22,6 @@
             </div>
             <div class="stats-header-actions">
               <span class="update-time" id="updateTime">2026-07-13 03:20 更新</span>
-              <button class="btn btn-outline" id="exportBtn"><i data-lucide="download"></i>导出</button>
-              <button class="btn btn-outline" id="batchBtn"><i data-lucide="layers"></i>批量操作</button>
               <button class="btn btn-primary" id="newTplBtn"><i data-lucide="plus"></i>新建模板</button>
             </div>
           </div>
@@ -38,7 +36,6 @@
               <button class="chip" data-cat="Inbox">Inbox模板</button>
               <button class="chip" data-cat="IM">IM模板</button>
               <button class="chip" data-cat="Bot">Bot模板</button>
-              <button class="chip" data-cat="reviewing">待审核模板</button>
             </div>
           </section>
 
@@ -62,6 +59,13 @@
                 </select>
               </div>
               <div class="filter-item">
+                <span class="filter-label">产品线</span>
+                <select class="select" id="fBiz">
+                  <option value="">全部产品线</option>
+                  <option>BingoPlus</option><option>ArenaPlus</option><option>BP-VIP</option>
+                </select>
+              </div>
+              <div class="filter-item">
                 <span class="filter-label">通道类型</span>
                 <select class="select" id="fChannel">
                   <option value="">全部</option>
@@ -74,23 +78,8 @@
                 <span class="filter-label">模板状态</span>
                 <select class="select" id="fStatus">
                   <option value="">全部</option>
-                  <option value="draft">草稿</option><option value="reviewing">审核中</option>
+                  <option value="draft">草稿</option>
                   <option value="active">已生效</option><option value="disabled">已停用</option>
-                  <option value="rejected">审核驳回</option>
-                </select>
-              </div>
-              <div class="filter-item">
-                <span class="filter-label">语言版本</span>
-                <select class="select" id="fLang">
-                  <option value="">全部</option>
-                  <option>中文</option><option>英文</option><option>菲律宾语</option>
-                </select>
-              </div>
-              <div class="filter-item">
-                <span class="filter-label">业务线</span>
-                <select class="select" id="fBiz">
-                  <option value="">全部业务线</option>
-                  <option>BingoPlus</option><option>ArenaPlus</option><option>BP-VIP</option>
                 </select>
               </div>
               <div class="filter-item">
@@ -131,7 +120,7 @@
                 <thead>
                   <tr>
                     <th class="col-name">模板名称</th><th class="col-name">模板编码</th><th>模板类型</th>
-                    <th>通道</th><th>语言</th><th class="num">变量数量</th><th>关联业务线</th>
+                    <th>产品线</th><th>通道</th><th class="num">变量数量</th>
                     <th>当前状态</th><th>最近更新时间</th><th>更新人</th>
                     <th class="col-ops">操作</th>
                   </tr>
@@ -158,11 +147,11 @@
         <button class="icon-btn" data-close aria-label="关闭"><i data-lucide="x"></i></button>
       </header>
       <div class="tpl-drawer-cols">
-        <div class="tpl-drawer-form" id="tplDrawerForm"></div>
         <div class="tpl-drawer-preview">
           <div class="pane-caption">模板预览</div>
           <div id="tplPreview"></div>
         </div>
+        <div class="tpl-drawer-form" id="tplDrawerForm"></div>
       </div>
       <footer class="drawer-footer" id="tplDrawerFooter"></footer>
     </aside>
@@ -170,6 +159,8 @@
 
   <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
   <script src="assets/common.js"></script>
+  <script src="assets/content-editor.js"></script>
+  <script src="assets/reach-config.js"></script>
   <script src="assets/search-select.js"></script>
   <script src="assets/templates.js"></script>
 </body>

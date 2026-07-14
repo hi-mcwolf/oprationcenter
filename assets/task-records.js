@@ -1,13 +1,54 @@
 /* 任务记录页：筛选 + KPI + 任务列表 + 详情抽屉 */
 
 const TASK_STATUS = {
-  draft:   { label: '草稿',   cls: 'tag-gray' },
-  pending: { label: '待发送', cls: 'tag-info' },
-  running: { label: '执行中', cls: 'tag-orange' },
-  done:    { label: '已完成', cls: 'tag-success' },
-  paused:  { label: '已暂停', cls: 'tag-gray-outline' },
-  failed:  { label: '失败',   cls: 'tag-danger' },
+  draft:     { label: '草稿',   cls: 'tag-gray' },
+  reviewing: { label: '审核中', cls: 'tag-orange' },
+  pending:   { label: '待发送', cls: 'tag-info' },
+  running:   { label: '执行中', cls: 'tag-orange' },
+  done:      { label: '已完成', cls: 'tag-success' },
+  paused:    { label: '已暂停', cls: 'tag-gray-outline' },
+  failed:    { label: '失败',   cls: 'tag-danger' },
 };
+
+const EXECUTION_TIPS = {
+  total: '任务目标人群总数',
+  pushable: '经过策略过滤后可推送的用户数',
+  valid: '有效且可触达的用户数',
+  duplicate: '因去重策略被排除的重复用户数',
+  blacklist: '命中黑名单被排除的用户数',
+  dnc: '命中 DNC（Do Not Contact）名单的用户数',
+  pushCount: '实际发起推送的总条数',
+  pushSuccess: '推送成功的条数',
+  pushFail: '推送失败的条数',
+  pendingConfirm: '已发送但待回执确认的数量',
+};
+
+function execMetric(label, key, value) {
+  return `<div class="desc-item"><span class="desc-label desc-label-with-tip">${label}${tipIcon(EXECUTION_TIPS[key])}</span><span>${fmt(value)}</span></div>`;
+}
+
+function enrichTaskRecords() {
+  TASK_RECORDS.forEach((t, i) => {
+    if (!t.productLine) t.productLine = ['BP-VIP', 'BingoPlus', 'BP-CONTENT OPERATION CENTER'][i % 3];
+    if (t.audienceCount == null) t.audienceCount = t.total;
+    if (!t.execution) {
+      const sent = t.sent || 0;
+      const fails = t.fails || 0;
+      t.execution = {
+        total: t.total,
+        pushable: Math.round(t.total * 0.95),
+        valid: Math.round(t.total * 0.92),
+        duplicate: Math.round(t.total * 0.03),
+        blacklist: Math.round(t.total * 0.02),
+        dnc: Math.round(t.total * 0.01),
+        pushCount: sent,
+        pushSuccess: sent && t.fails != null ? sent - fails : sent,
+        pushFail: fails,
+        pendingConfirm: Math.round(sent * 0.05),
+      };
+    }
+  });
+}
 
 /* ---------------- Mock 数据 ---------------- */
 const TASK_RECORDS = [
@@ -70,7 +111,7 @@ const TASK_RECORDS = [
   {
     id: 'T20260711008', name: 'Telegram 社群拉新', type: '营销活动', audience: '活跃用户',
     channels: ['Telegram'], timing: '2026-07-14 12:00 定时', strategy: '单活动触达频控',
-    status: 'pending', creator: 'lily@', createdAt: '2026-07-11 16:25', updatedAt: '2026-07-11 16:25',
+    status: 'reviewing', creator: 'lily@', createdAt: '2026-07-11 16:25', updatedAt: '2026-07-12 09:10',
     sent: null, total: 12800, deliverRate: null, opens: null, clicks: null, fails: null,
     party: '自营平台', sender: '@BingoPlusBot', template: '-',
     contentSummary: '加入官方社群，每日抽奖赢免费竞猜券！',
@@ -173,10 +214,13 @@ const TASK_RECORDS = [
   },
 ];
 
+enrichTaskRecords();
+
 /* ---------------- 状态 ---------------- */
 const PAGE_SIZE = 8;
 let currentPage = 1;
 let filtered = [...TASK_RECORDS];
+let productLineFilter = null;
 
 const fmt = v => (v === null || v === undefined || v === '' || v === '-') ? '-' : (typeof v === 'number' ? v.toLocaleString() : v);
 
@@ -186,10 +230,11 @@ function renderKpis() {
   const running = TASK_RECORDS.filter(t => t.status === 'running').length;
   const todayNew = TASK_RECORDS.filter(t => t.createdAt.startsWith('2026-07-13')).length;
   const failed = TASK_RECORDS.filter(t => t.status === 'failed').length;
+  const reviewing = TASK_RECORDS.filter(t => t.status === 'reviewing').length;
   const kpis = [
     { title: '任务总数', value: total, cls: '' },
     { title: '执行中任务数', value: running, cls: 'kpi-orange' },
-    { title: '今日新建任务数', value: todayNew, cls: 'kpi-blue' },
+    { title: '审核中', value: reviewing, cls: 'kpi-orange' },
     { title: '失败任务数', value: failed, cls: 'kpi-red' },
   ];
   document.getElementById('kpiGrid').innerHTML = kpis.map(k => `
@@ -209,9 +254,12 @@ function applyFilters() {
   const strategy = document.getElementById('fStrategy').value;
   const creator = document.getElementById('fCreator').value;
 
+  const productLines = productLineFilter?.getValue() || [];
+
   filtered = TASK_RECORDS.filter(t =>
-    (!name || t.name.toLowerCase().includes(name)) &&
+    (!name || t.name.toLowerCase().includes(name) || t.id.toLowerCase().includes(name)) &&
     (!type || t.type === type) &&
+    (!productLines.length || productLines.includes(t.productLine)) &&
     (!channel || t.channels.includes(channel)) &&
     (!status || t.status === status) &&
     (!party || t.party === party) &&
@@ -226,30 +274,35 @@ function resetFilters() {
   ['fName'].forEach(id => document.getElementById(id).value = '');
   ['fType', 'fChannel', 'fStatus', 'fParty', 'fStrategy', 'fCreator'].forEach(id =>
     document.getElementById(id).value = '');
+  productLineFilter?.setValue([]);
   applyFilters();
 }
 
 /* ---------------- 表格与分页 ---------------- */
 function renderTable() {
+  closeAllMoreMenus();
   const tbody = document.getElementById('taskTableBody');
   const start = (currentPage - 1) * PAGE_SIZE;
   const rows = filtered.slice(start, start + PAGE_SIZE);
 
   if (!rows.length) {
-    tbody.innerHTML = `<tr><td colspan="13" class="cell-empty">暂无符合条件的任务</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="15" class="cell-empty">暂无符合条件的任务</td></tr>`;
   } else {
     tbody.innerHTML = rows.map(t => {
       const st = TASK_STATUS[t.status];
-      const pauseBtn = t.status === 'running'
-        ? `<button class="link-btn" data-pause="${t.id}">暂停</button>`
+      const audienceText = `${t.audience}（${t.audienceCount.toLocaleString()}人）`;
+      const pauseItem = t.status === 'running'
+        ? `<button class="more-item" data-act="pause" data-id="${t.id}">暂停</button>`
         : t.status === 'paused'
-          ? `<button class="link-btn" data-resume="${t.id}">恢复</button>`
+          ? `<button class="more-item" data-act="resume" data-id="${t.id}">恢复</button>`
           : '';
       return `
         <tr>
           <td class="col-name"><span class="cell-ellipsis" title="${t.name}">${t.name}</span></td>
+          <td class="cell-muted">${t.id}</td>
           <td>${t.type}</td>
-          <td><span class="cell-ellipsis" title="${t.audience}">${t.audience}</span></td>
+          <td><span class="cell-ellipsis" title="${audienceText}">${audienceText}</span></td>
+          <td>${t.productLine}</td>
           <td>${t.channels.map(c => `<span class="tag">${c}</span>`).join('')}</td>
           <td>${fmt(t.timing)}</td>
           <td><span class="cell-ellipsis" title="${t.strategy}">${fmt(t.strategy)}</span></td>
@@ -261,10 +314,10 @@ function renderTable() {
           <td class="num">${fmt(t.deliverRate)}</td>
           <td class="col-ops">
             <button class="link-btn" data-detail="${t.id}">查看详情</button>
-            ${pauseBtn}
             <span class="more-wrap">
               <button class="link-btn" data-more="${t.id}">更多<i data-lucide="chevron-down"></i></button>
               <span class="more-menu" hidden>
+                ${pauseItem}
                 <button class="more-item" data-act="copy" data-id="${t.id}">复制任务</button>
                 <button class="more-item" data-act="records" data-id="${t.id}">查看发送记录</button>
                 <button class="more-item more-danger" data-act="stop" data-id="${t.id}">终止任务</button>
@@ -304,35 +357,22 @@ function bindRowActions() {
   tbody.querySelectorAll('[data-detail]').forEach(btn =>
     btn.addEventListener('click', () => openTaskDetail(btn.dataset.detail)));
 
-  tbody.querySelectorAll('[data-pause]').forEach(btn =>
-    btn.addEventListener('click', () => {
-      const t = TASK_RECORDS.find(x => x.id === btn.dataset.pause);
-      t.status = 'paused';
-      showToast(`任务「${t.name}」已暂停`);
-      renderKpis(); renderTable();
-    }));
-
-  tbody.querySelectorAll('[data-resume]').forEach(btn =>
-    btn.addEventListener('click', () => {
-      const t = TASK_RECORDS.find(x => x.id === btn.dataset.resume);
-      t.status = 'running';
-      showToast(`任务「${t.name}」已恢复`);
-      renderKpis(); renderTable();
-    }));
-
-  tbody.querySelectorAll('[data-more]').forEach(btn =>
-    btn.addEventListener('click', e => {
-      e.stopPropagation();
-      const menu = btn.parentElement.querySelector('.more-menu');
-      const wasHidden = menu.hidden;
-      document.querySelectorAll('.more-menu').forEach(m => m.hidden = true);
-      menu.hidden = !wasHidden;
-    }));
+  bindMoreMenus(tbody);
 
   tbody.querySelectorAll('.more-item').forEach(item =>
     item.addEventListener('click', () => {
       const t = TASK_RECORDS.find(x => x.id === item.dataset.id);
-      item.closest('.more-menu').hidden = true;
+      closeAllMoreMenus();
+      if (item.dataset.act === 'pause') {
+        t.status = 'paused';
+        showToast(`任务「${t.name}」已暂停`);
+        renderKpis(); renderTable();
+      }
+      if (item.dataset.act === 'resume') {
+        t.status = 'running';
+        showToast(`任务「${t.name}」已恢复`);
+        renderKpis(); renderTable();
+      }
       if (item.dataset.act === 'copy') showToast(`已复制任务「${t.name}」为草稿`);
       if (item.dataset.act === 'records') location.href = 'send-records.html';
       if (item.dataset.act === 'stop') {
@@ -375,12 +415,16 @@ function openTaskDetail(id) {
     <section class="card detail-group">
       <h4 class="card-title">执行信息</h4>
       <div class="desc-list">
-        <div class="desc-item"><span class="desc-label">发送总量</span><span>${fmt(t.sent)}</span></div>
-        <div class="desc-item"><span class="desc-label">送达量</span><span>${t.sent && t.fails !== null ? (t.sent - t.fails).toLocaleString() : '-'}</span></div>
-        <div class="desc-item"><span class="desc-label">打开量</span><span>${fmt(t.opens)}</span></div>
-        <div class="desc-item"><span class="desc-label">点击量</span><span>${fmt(t.clicks)}</span></div>
-        <div class="desc-item"><span class="desc-label">失败量</span><span>${fmt(t.fails)}</span></div>
-        <div class="desc-item"><span class="desc-label">最近执行时间</span><span>${fmt(t.updatedAt)}</span></div>
+        ${execMetric('总数', 'total', t.execution.total)}
+        ${execMetric('可推送用户数', 'pushable', t.execution.pushable)}
+        ${execMetric('有效用户数', 'valid', t.execution.valid)}
+        ${execMetric('重复用户数', 'duplicate', t.execution.duplicate)}
+        ${execMetric('黑名单用户数', 'blacklist', t.execution.blacklist)}
+        ${execMetric('DNC用户数', 'dnc', t.execution.dnc)}
+        ${execMetric('推送条数', 'pushCount', t.execution.pushCount)}
+        ${execMetric('推送成功条数', 'pushSuccess', t.execution.pushSuccess)}
+        ${execMetric('推送失败条数', 'pushFail', t.execution.pushFail)}
+        ${execMetric('待确认数', 'pendingConfirm', t.execution.pendingConfirm)}
       </div>
     </section>`;
 
@@ -400,6 +444,13 @@ document.addEventListener('DOMContentLoaded', () => {
   bindDrawerClose();
 
   // 触达策略筛选项（来自共享数据）
+  productLineFilter = createSearchMultiSelect({
+    container: document.getElementById('fProductLine'),
+    options: PRODUCT_LINES.map(p => ({ value: p.value, label: p.label })),
+    placeholder: '全部产品线',
+    searchPlaceholder: '搜索产品线…',
+  });
+
   const fStrategy = document.getElementById('fStrategy');
   fStrategy.innerHTML = '<option value="">全部策略</option>' +
     REACH_STRATEGIES.map(s => `<option value="${s.name}">${s.name}</option>`).join('');
@@ -422,7 +473,10 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('detailEditBtn').addEventListener('click', () => showToast('进入任务编辑（原型演示）'));
 
   // 点击空白处收起更多菜单
-  document.addEventListener('click', () => document.querySelectorAll('.more-menu').forEach(m => m.hidden = true));
+  document.addEventListener('click', () => closeAllMoreMenus());
+  document.querySelectorAll('.table-scroll').forEach(el => {
+    el.addEventListener('scroll', closeAllMoreMenus, { passive: true });
+  });
 
   renderKpis();
   renderTable();

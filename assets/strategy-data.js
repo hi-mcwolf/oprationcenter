@@ -12,10 +12,6 @@ const STRATEGY_CATEGORIES = [
     badge: { text: '2条生效中', type: 'info' },
   },
   {
-    id: 'channel-route', name: '渠道路由', icon: 'route',
-    desc: '决定消息走哪个渠道，主备通道与回退逻辑',
-  },
-  {
     id: 'template', name: '模板策略', icon: 'file-text',
     desc: '不同场景、不同渠道下用什么模板',
   },
@@ -37,9 +33,8 @@ const STRATEGY_CATEGORIES = [
     desc: '发送失败后的补救机制',
   },
   {
-    id: 'ratelimit', name: '限流策略', icon: 'sliders-horizontal',
-    desc: '控制单位时间内整体发送量',
-    badge: { text: '2个预警', type: 'warning' },
+    id: 'channel-route', name: '渠道路由', icon: 'route',
+    desc: '决定消息走哪个渠道，主备通道与回退逻辑',
   },
   {
     id: 'vendor-route', name: '供应商路由', icon: 'git-branch',
@@ -484,6 +479,19 @@ const REACH_STRATEGIES = [
     ],
   },
 ];
+
+const VISIBLE_STRATEGY_CATEGORY_IDS = [
+  'frequency', 'dnd', 'dedup', 'retry',
+  'channel-route', 'vendor-route', 'ai',
+];
+
+function visibleStrategyCategories() {
+  return STRATEGY_CATEGORIES.filter(c => VISIBLE_STRATEGY_CATEGORY_IDS.includes(c.id));
+}
+
+function visibleReachStrategies() {
+  return REACH_STRATEGIES.filter(s => VISIBLE_STRATEGY_CATEGORY_IDS.includes(s.category));
+}
 
 const STRATEGY_STATUS = {
   active: { label: '生效中', cls: 'tag-success' },

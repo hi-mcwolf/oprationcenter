@@ -17,13 +17,6 @@ const NAV_ITEMS = [
     ],
   },
   {
-    key: 'marketing', label: '营销', icon: 'megaphone',
-    children: [
-      { key: 'marketing-campaign', label: '营销活动', href: 'marketing.html' },
-      { key: 'marketing-calendar', label: '营销日历', href: 'javascript:;' },
-    ],
-  },
-  {
     key: 'reach', label: '触达', icon: 'send',
     children: [
       { key: 'reach-task', label: '触达任务', href: 'reach.html' },
@@ -48,6 +41,17 @@ const NAV_ITEMS = [
       { key: 'compliance-audit', label: '审计日志', href: 'javascript:;' },
     ],
   },
+];
+
+const PRODUCT_LINES = [
+  { value: 'BP-VIP', label: 'BP-VIP' },
+  { value: 'BP-CONTENT OPERATION CENTER', label: 'BP-CONTENT OPERATION CENTER' },
+  { value: 'BingoPlus', label: 'BingoPlus' },
+];
+
+const USER_ACCOUNT_SAMPLES = [
+  'bingoplusjuan01', 'bingoplusmaria02', 'bingopluskevin03',
+  'bingoplusana04', 'bingopluspaolo05', 'bingoplusgrace06',
 ];
 
 function renderSidebar(activeKey, activeSubKey) {
@@ -99,8 +103,23 @@ function renderTopbar() {
     <nav class="topbar-menu">
       <a class="topbar-item active" href="javascript:;">运营中心</a>
     </nav>
-    <div class="topbar-user"><span class="avatar">M</span>marvin@</div>
+    <div class="topbar-actions">
+      <button class="btn btn-outline btn-sm" id="sdkBtn" type="button">SDK</button>
+      <div class="topbar-user"><span class="avatar">M</span>marvin@</div>
+    </div>
   `;
+  const sdkBtn = host.querySelector('#sdkBtn');
+  if (sdkBtn && !sdkBtn.dataset.bound) {
+    sdkBtn.dataset.bound = '1';
+    sdkBtn.addEventListener('click', () => {
+      if (typeof initReachConfigDrawer === 'function') initReachConfigDrawer();
+      openDrawer('reachDrawer');
+    });
+  }
+}
+
+function tipIcon(tipText) {
+  return `<span class="tip-icon" data-tip="${tipText.replace(/"/g, '&quot;')}"><i data-lucide="help-circle"></i></span>`;
 }
 
 /* ---- 抽屉 ---- */
@@ -151,4 +170,170 @@ function showToast(msg) {
 /* ---- Lucide 图标刷新 ---- */
 function refreshIcons() {
   if (window.lucide) lucide.createIcons();
+}
+
+/* ---- 字符数计数 ---- */
+function shouldAttachCharCounter(el) {
+  if (el.dataset.charCount === 'off') return false;
+  if (el.closest('.filter-card')) return false;
+  if (el.matches('.ssel-search, .msel-search')) return false;
+  if (el.tagName === 'INPUT') {
+    const type = (el.getAttribute('type') || 'text').toLowerCase();
+    if (type !== 'text' && type !== 'search') return false;
+  }
+  if (el.hidden) return false;
+  if (el.closest('[hidden]')) return false;
+  return true;
+}
+
+function getCharMax(el) {
+  if (el.dataset.charMax) return Number(el.dataset.charMax);
+  const ml = el.getAttribute('maxlength');
+  if (ml && ml !== '-1') return Number(ml);
+  return null;
+}
+
+function formatCharCount(len, max) {
+  if (max != null && !Number.isNaN(max)) return `字数：${len} / ${max}`;
+  return `字数：${len}`;
+}
+
+function updateCharCounterEl(el, counter) {
+  const len = el.value?.length ?? 0;
+  const max = getCharMax(el);
+  counter.textContent = formatCharCount(len, max);
+  counter.classList.toggle('over', max != null && len > max);
+  const wrap = el.closest('.input-char-wrap');
+  if (wrap) wrap.classList.toggle('input-char-wrap--has-max', max != null && !Number.isNaN(max));
+}
+
+function ensureCharCounterWrap(el) {
+  let wrap = el.parentElement;
+  if (wrap?.classList.contains('input-char-wrap')) return wrap;
+
+  const orphanCounter = el.nextElementSibling?.classList.contains('char-counter')
+    || el.nextElementSibling?.classList.contains('char-count')
+    ? el.nextElementSibling : null;
+
+  wrap = document.createElement('div');
+  wrap.className = 'input-char-wrap';
+  if (el.classList.contains('input-sm')) wrap.classList.add('input-char-wrap--sm');
+  el.parentNode.insertBefore(wrap, el);
+  wrap.appendChild(el);
+  if (orphanCounter) {
+    orphanCounter.classList.remove('char-count');
+    orphanCounter.classList.add('char-counter');
+    wrap.appendChild(orphanCounter);
+  }
+  return wrap;
+}
+
+function getOrCreateCounter(wrap) {
+  let counter = wrap.querySelector(':scope > .char-counter');
+  if (!counter) {
+    counter = document.createElement('span');
+    counter.className = 'char-counter';
+    wrap.appendChild(counter);
+  }
+  return counter;
+}
+
+function initCharCounters(root = document) {
+  root.querySelectorAll('input[type="text"], input:not([type]), textarea').forEach(el => {
+    if (!shouldAttachCharCounter(el)) return;
+
+    const wrap = ensureCharCounterWrap(el);
+    const counter = getOrCreateCounter(wrap);
+    updateCharCounterEl(el, counter);
+
+    if (!el.dataset.charCountBound) {
+      el.dataset.charCountBound = '1';
+      el.addEventListener('input', () => updateCharCounterEl(el, counter));
+    }
+  });
+}
+
+document.addEventListener('DOMContentLoaded', () => initCharCounters());
+
+/* ---- 更多操作菜单（挂到 body，避免被表格 overflow / sticky 裁切） ---- */
+let floatingMoreMenu = null;
+
+function ensureFloatingMoreMenu() {
+  if (floatingMoreMenu?.isConnected) return floatingMoreMenu;
+  floatingMoreMenu = document.createElement('div');
+  floatingMoreMenu.className = 'more-menu more-menu--fixed';
+  floatingMoreMenu.hidden = true;
+  floatingMoreMenu.addEventListener('click', e => e.stopPropagation());
+  document.body.appendChild(floatingMoreMenu);
+  return floatingMoreMenu;
+}
+
+function closeAllMoreMenus() {
+  if (floatingMoreMenu) {
+    floatingMoreMenu.hidden = true;
+    floatingMoreMenu.innerHTML = '';
+    floatingMoreMenu.dataset.for = '';
+    floatingMoreMenu.style.cssText = '';
+  }
+  document.querySelectorAll('.more-wrap .more-menu').forEach(m => { m.hidden = true; });
+}
+
+function positionMoreMenu(btn, menu) {
+  const rect = btn.getBoundingClientRect();
+  menu.classList.add('more-menu--fixed');
+  menu.style.position = 'fixed';
+  menu.style.visibility = 'hidden';
+  menu.style.left = '0px';
+  menu.style.top = '0px';
+  menu.style.right = 'auto';
+  menu.style.zIndex = '1000';
+
+  const mw = menu.offsetWidth || 140;
+  const mh = menu.offsetHeight || 0;
+  let left = rect.right - mw;
+  left = Math.min(Math.max(8, left), window.innerWidth - mw - 8);
+  let top = rect.bottom + 4;
+  if (top + mh > window.innerHeight - 8) {
+    top = Math.max(8, rect.top - mh - 4);
+  }
+
+  menu.style.left = `${left}px`;
+  menu.style.top = `${top}px`;
+  menu.style.visibility = 'visible';
+}
+
+function toggleMoreMenu(btn) {
+  const source = btn.closest('.more-wrap')?.querySelector('.more-menu');
+  if (!source) return;
+  const menu = ensureFloatingMoreMenu();
+  const opening = menu.hidden || menu.dataset.for !== btn.dataset.more;
+  closeAllMoreMenus();
+  if (!opening) return;
+
+  menu.innerHTML = source.innerHTML;
+  menu.dataset.for = btn.dataset.more;
+  menu.hidden = false;
+  positionMoreMenu(btn, menu);
+
+  menu.querySelectorAll('.more-item').forEach(item => {
+    item.addEventListener('click', () => {
+      const act = item.dataset.act;
+      const id = item.dataset.id;
+      const orig = source.querySelector(`.more-item[data-act="${act}"][data-id="${id}"]`)
+        || source.querySelector(`.more-item[data-act="${act}"]`);
+      closeAllMoreMenus();
+      orig?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    });
+  });
+}
+
+function bindMoreMenus(root = document) {
+  root.querySelectorAll('[data-more]').forEach(btn => {
+    if (btn.dataset.moreBound) return;
+    btn.dataset.moreBound = '1';
+    btn.addEventListener('click', e => {
+      e.stopPropagation();
+      toggleMoreMenu(btn);
+    });
+  });
 }
