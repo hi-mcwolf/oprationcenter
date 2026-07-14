@@ -247,7 +247,6 @@ function renderKpis() {
 /* ---------------- 筛选 ---------------- */
 function applyFilters() {
   const name = document.getElementById('fName').value.trim().toLowerCase();
-  const type = document.getElementById('fType').value;
   const channel = document.getElementById('fChannel').value;
   const status = document.getElementById('fStatus').value;
   const party = document.getElementById('fParty').value;
@@ -258,7 +257,6 @@ function applyFilters() {
 
   filtered = TASK_RECORDS.filter(t =>
     (!name || t.name.toLowerCase().includes(name) || t.id.toLowerCase().includes(name)) &&
-    (!type || t.type === type) &&
     (!productLines.length || productLines.includes(t.productLine)) &&
     (!channel || t.channels.includes(channel)) &&
     (!status || t.status === status) &&
@@ -272,7 +270,7 @@ function applyFilters() {
 
 function resetFilters() {
   ['fName'].forEach(id => document.getElementById(id).value = '');
-  ['fType', 'fChannel', 'fStatus', 'fParty', 'fStrategy', 'fCreator'].forEach(id =>
+  ['fChannel', 'fStatus', 'fParty', 'fStrategy', 'fCreator'].forEach(id =>
     document.getElementById(id).value = '');
   productLineFilter?.setValue([]);
   applyFilters();
@@ -286,7 +284,7 @@ function renderTable() {
   const rows = filtered.slice(start, start + PAGE_SIZE);
 
   if (!rows.length) {
-    tbody.innerHTML = `<tr><td colspan="15" class="cell-empty">暂无符合条件的任务</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="14" class="cell-empty">暂无符合条件的任务</td></tr>`;
   } else {
     tbody.innerHTML = rows.map(t => {
       const st = TASK_STATUS[t.status];
@@ -300,7 +298,6 @@ function renderTable() {
         <tr>
           <td class="col-name"><span class="cell-ellipsis" title="${t.name}">${t.name}</span></td>
           <td class="cell-muted">${t.id}</td>
-          <td>${t.type}</td>
           <td><span class="cell-ellipsis" title="${audienceText}">${audienceText}</span></td>
           <td>${t.productLine}</td>
           <td>${t.channels.map(c => `<span class="tag">${c}</span>`).join('')}</td>
@@ -393,7 +390,6 @@ function openTaskDetail(id) {
       <div class="desc-list">
         <div class="desc-item"><span class="desc-label">任务名称</span><span>${t.name}</span></div>
         <div class="desc-item"><span class="desc-label">任务 ID</span><span>${t.id}</span></div>
-        <div class="desc-item"><span class="desc-label">任务类型</span><span>${t.type}</span></div>
         <div class="desc-item"><span class="desc-label">创建人</span><span>${t.creator}</span></div>
         <div class="desc-item"><span class="desc-label">创建时间</span><span>${t.createdAt}</span></div>
         <div class="desc-item"><span class="desc-label">当前状态</span><span class="tag ${st.cls}">${st.label}</span></div>

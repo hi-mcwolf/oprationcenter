@@ -91,7 +91,7 @@ function reachConfigDrawerHtml() {
           </div>
           <p class="suggest-basis">
             基于 <em>"World Cup Group Stage Quiz"</em> 等任务的 <em>触达率 38.6%</em>
-            推荐采用 <em>短信、电销</em> 通道，<!-- 在 <em>活动开始前 2 小时</em>--> 发送 <em>竞猜提醒类内容</em>
+            推荐采用 <em>短信</em> 通道，<!-- 在 <em>活动开始前 2 小时</em>--> 发送 <em>竞猜提醒类内容</em>
           </p>
           <div class="suggest-actions">
             <button type="button" class="btn btn-primary" id="adoptBtn">采纳建议</button>

@@ -93,15 +93,26 @@ function bindTemplateTools(root, getText, setText) {
   });
 }
 
-function bindUpload(btn, input, preview, onChange) {
-  btn.addEventListener('click', () => input.click());
-  input.addEventListener('change', () => {
-    const file = input.files[0];
-    if (!file) return;
+function bindUpload(btn, input, preview, onChange, { accept = 'image/*' } = {}) {
+  const zone = preview.closest('.upload-field') || preview;
+
+  const applyFile = file => {
+    if (!file || !matchFileAccept(file, accept)) return;
     preview.classList.add('has-file');
     preview.innerHTML = `<i data-lucide="image"></i><span>${file.name}</span>`;
     refreshIcons();
     onChange(file.name);
+  };
+
+  btn.addEventListener('click', () => input.click());
+  input.addEventListener('change', () => {
+    applyFile(input.files[0]);
+    input.value = '';
+  });
+  bindDropPasteUpload({
+    zone,
+    accept,
+    onFiles: files => applyFile(files[0]),
   });
 }
 
@@ -200,6 +211,7 @@ function createContentEditor({ container, channel, value, onChange, showTemplate
             <button type="button" class="btn btn-outline btn-sm ce-upload-app"><i data-lucide="upload"></i>上传图标</button>
             <input type="file" class="ce-file-app" accept="image/*" hidden>
             <div class="upload-preview ce-preview-app"><i data-lucide="image"></i><span>未上传</span></div>
+            <p class="upload-drop-hint">支持拖拽 / 粘贴上传</p>
           </div>
         </div>
         <div class="field"><span class="field-label">图片</span>
@@ -207,6 +219,7 @@ function createContentEditor({ container, channel, value, onChange, showTemplate
             <button type="button" class="btn btn-outline btn-sm ce-upload-img"><i data-lucide="upload"></i>上传图片</button>
             <input type="file" class="ce-file-img" accept="image/*" hidden>
             <div class="upload-preview ce-preview-img"><i data-lucide="image"></i><span>未上传</span></div>
+            <p class="upload-drop-hint">支持拖拽 / 粘贴上传</p>
           </div>
         </div>
         <div class="field"><span class="field-label">标题</span>
@@ -253,6 +266,7 @@ function createContentEditor({ container, channel, value, onChange, showTemplate
               <button type="button" class="btn btn-outline btn-sm ce-upload-img"><i data-lucide="upload"></i>上传图片</button>
               <input type="file" class="ce-file-img" accept="image/*" hidden>
               <div class="upload-preview ce-preview-img"><i data-lucide="image"></i><span>未上传</span></div>
+              <p class="upload-drop-hint">支持拖拽 / 粘贴上传</p>
             </div>
           </div>` : ''}
         <div class="field">

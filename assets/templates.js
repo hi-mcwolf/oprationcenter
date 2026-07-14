@@ -7,11 +7,12 @@ const TPL_STATUS = {
 };
 
 const CHANNELS = ['SMS', '邮件', 'Push', 'Inbox', 'IM', 'Bot', 'Viber', 'Telegram', '电销'];
+const TEMPLATE_TYPES = ['营销', 'OTP'];
 
 /* ---------------- Mock 数据（18 条） ---------------- */
 let TEMPLATE_RECORDS = [
   {
-    id: 'tpl-001', name: '世界杯竞猜提醒', code: 'TPL-SMS-0012', type: '运营活动类', channel: 'SMS',
+    id: 'tpl-001', name: '世界杯竞猜提醒', code: 'TPL-SMS-0012', type: '营销', channel: 'SMS',
     langs: '英文', bizLine: 'BingoPlus', status: 'active', creator: 'marvin@',
     createdAt: '2026-06-10 10:20', updatedAt: '2026-07-10 15:42', updatedBy: 'marvin@',
     content: { text: "Hi {{user_name}}! Only the best teams remain! Warm up for the Quarterfinals with today's FREE World Cup Quiz. Visit bingoplus.com.", hasShortLink: true, signature: 'BPLUS' },
@@ -27,7 +28,7 @@ let TEMPLATE_RECORDS = [
     ],
   },
   {
-    id: 'tpl-002', name: '充值优惠通知', code: 'TPL-EMAIL-0008', type: '营销类', channel: '邮件',
+    id: 'tpl-002', name: '充值优惠通知', code: 'TPL-EMAIL-0008', type: '营销', channel: '邮件',
     langs: '中文', bizLine: 'BingoPlus', status: 'active', creator: 'lily@',
     createdAt: '2026-06-15 14:05', updatedAt: '2026-07-08 11:30', updatedBy: 'lily@',
     content: { subject: '本周充值满 {{bonus_amount}} 即享 8% 加赠', subtitle: '限时活动，今晚 24:00 截止', body: '尊敬的用户 {{user_name}}，本周充值满 {{bonus_amount}} 即享 8% 加赠，活动今晚 24:00 截止，立即打开 App 参与吧！', ctaText: '立即充值', ctaLink: 'https://bingoplus.com/recharge' },
@@ -42,7 +43,7 @@ let TEMPLATE_RECORDS = [
     ],
   },
   {
-    id: 'tpl-003', name: '每日签到提醒', code: 'TPL-PUSH-0021', type: '促活类', channel: 'Push',
+    id: 'tpl-003', name: '每日签到提醒', code: 'TPL-PUSH-0021', type: '营销', channel: 'Push',
     langs: '中文', bizLine: 'BingoPlus', status: 'active', creator: 'ken@',
     createdAt: '2026-06-20 09:00', updatedAt: '2026-07-12 18:12', updatedBy: 'ken@',
     content: { title: '签到礼包已刷新', body: '{{user_name}}，连续签到 7 天可领神秘大奖！今日签到即得 {{bonus_amount}} 积分', link: 'bingoplus://signin', imageHint: '签到图标 64×64' },
@@ -57,7 +58,7 @@ let TEMPLATE_RECORDS = [
     ],
   },
   {
-    id: 'tpl-004', name: '系统维护通知', code: 'TPL-INBOX-0003', type: '通知类', channel: 'Inbox',
+    id: 'tpl-004', name: '系统维护通知', code: 'TPL-INBOX-0003', type: 'OTP', channel: 'Inbox',
     langs: '中文', bizLine: 'BingoPlus', status: 'active', creator: 'marvin@',
     createdAt: '2026-06-25 16:40', updatedAt: '2026-07-06 09:25', updatedBy: 'marvin@',
     content: { title: '系统升级维护通知', body: '系统将于 {{expire_time}} 进行升级维护，期间部分功能暂不可用，敬请谅解。', buttonText: '查看详情' },
@@ -70,7 +71,7 @@ let TEMPLATE_RECORDS = [
     ],
   },
   {
-    id: 'tpl-005', name: '客服满意度回访', code: 'TPL-IM-0007', type: '通知类', channel: 'IM',
+    id: 'tpl-005', name: '客服满意度回访', code: 'TPL-IM-0007', type: 'OTP', channel: 'IM',
     langs: '中文', bizLine: 'BingoPlus', status: 'reviewing', creator: 'lily@',
     createdAt: '2026-07-01 10:15', updatedAt: '2026-07-11 14:05', updatedBy: 'lily@',
     content: { title: '服务评价邀请', body: '感谢您使用在线客服，邀请您对本次服务进行评价，您的反馈对我们很重要。', buttonText: '去评价' },
@@ -81,7 +82,7 @@ let TEMPLATE_RECORDS = [
     ],
   },
   {
-    id: 'tpl-006', name: '竞猜 Bot 自动提醒', code: 'TPL-BOT-0015', type: '运营活动类', channel: 'Bot',
+    id: 'tpl-006', name: '竞猜 Bot 自动提醒', code: 'TPL-BOT-0015', type: '营销', channel: 'Bot',
     langs: '英文', bizLine: 'BingoPlus', status: 'active', creator: 'ken@',
     createdAt: '2026-07-02 11:20', updatedAt: '2026-07-09 16:40', updatedBy: 'ken@',
     content: { title: 'Quiz Starting Soon', body: 'The match you follow starts in 30 minutes. Submit your prediction now!', buttonText: 'Submit Prediction' },
@@ -94,7 +95,7 @@ let TEMPLATE_RECORDS = [
     ],
   },
   {
-    id: 'tpl-007', name: '流失召回话术', code: 'TPL-SMS-0005', type: '召回类', channel: 'SMS',
+    id: 'tpl-007', name: '流失召回话术', code: 'TPL-SMS-0005', type: '营销', channel: 'SMS',
     langs: '中文', bizLine: 'BingoPlus', status: 'active', creator: 'marvin@',
     createdAt: '2026-05-28 09:30', updatedAt: '2026-07-05 10:35', updatedBy: 'lily@',
     content: { text: '您好 {{user_name}}，我们注意到您已有一段时间未登录。现为您专属保留了回归礼包，登录即可领取，期待您的回来！', hasShortLink: false, signature: 'BPLUS' },
@@ -108,7 +109,7 @@ let TEMPLATE_RECORDS = [
     ],
   },
   {
-    id: 'tpl-008', name: 'VIP 生日祝福邮件', code: 'TPL-EMAIL-0018', type: '生命周期类', channel: '邮件',
+    id: 'tpl-008', name: 'VIP 生日祝福邮件', code: 'TPL-EMAIL-0018', type: '营销', channel: '邮件',
     langs: '英文', bizLine: 'BP-VIP', status: 'active', creator: 'lily@',
     createdAt: '2026-06-08 15:50', updatedAt: '2026-07-07 11:20', updatedBy: 'lily@',
     content: { subject: 'Happy Birthday, {{user_name}}!', subtitle: 'Your exclusive VIP gift awaits', body: 'Dear {{user_name}}, on your special day we have prepared an exclusive birthday gift worth {{bonus_amount}}. Log in now to claim it!', ctaText: 'Claim Gift', ctaLink: 'https://bingoplus.com/vip/birthday' },
@@ -122,7 +123,7 @@ let TEMPLATE_RECORDS = [
     ],
   },
   {
-    id: 'tpl-009', name: '新功能上线公告', code: 'TPL-PUSH-0009', type: '通知类', channel: 'Push',
+    id: 'tpl-009', name: '新功能上线公告', code: 'TPL-PUSH-0009', type: 'OTP', channel: 'Push',
     langs: '中文', bizLine: 'BingoPlus', status: 'disabled', creator: 'ken@',
     createdAt: '2026-06-12 10:00', updatedAt: '2026-06-30 16:45', updatedBy: 'marvin@',
     content: { title: '全新功能上线', body: '「星灵标签」功能已上线，人群圈选更精准，快来体验！', link: 'bingoplus://features/tags', imageHint: '功能图标' },
@@ -133,7 +134,7 @@ let TEMPLATE_RECORDS = [
     ],
   },
   {
-    id: 'tpl-010', name: 'Viber 回馈礼包', code: 'TPL-VIBER-0002', type: '营销类', channel: 'Viber',
+    id: 'tpl-010', name: 'Viber 回馈礼包', code: 'TPL-VIBER-0002', type: '营销', channel: 'Viber',
     langs: '菲律宾语', bizLine: 'BingoPlus', status: 'reviewing', creator: 'marvin@',
     createdAt: '2026-07-05 14:00', updatedAt: '2026-07-10 10:12', updatedBy: 'marvin@',
     content: { title: 'Exclusive Gift', body: 'Mahal na {{user_name}}, ang iyong eksklusibong regalo ay handa na. I-click para kunin!', buttonText: 'Claim Now' },
@@ -146,7 +147,7 @@ let TEMPLATE_RECORDS = [
     ],
   },
   {
-    id: 'tpl-011', name: 'Telegram 社群邀请', code: 'TPL-TG-0004', type: '促活类', channel: 'Telegram',
+    id: 'tpl-011', name: 'Telegram 社群邀请', code: 'TPL-TG-0004', type: '营销', channel: 'Telegram',
     langs: '英文', bizLine: 'BingoPlus', status: 'active', creator: 'lily@',
     createdAt: '2026-07-06 09:20', updatedAt: '2026-07-11 16:25', updatedBy: 'lily@',
     content: { title: 'Join Our Community', body: 'Join the official BingoPlus community for daily free quiz tickets and exclusive bonuses!', buttonText: 'Join Group' },
@@ -157,7 +158,7 @@ let TEMPLATE_RECORDS = [
     ],
   },
   {
-    id: 'tpl-012', name: '电销 VIP 回访话术', code: 'TPL-TELE-0001', type: '召回类', channel: '电销',
+    id: 'tpl-012', name: '电销 VIP 回访话术', code: 'TPL-TELE-0001', type: '营销', channel: '电销',
     langs: '中文', bizLine: 'BP-VIP', status: 'active', creator: 'ken@',
     createdAt: '2026-06-18 13:30', updatedAt: '2026-07-04 09:50', updatedBy: 'ken@',
     content: { title: 'VIP 回访', body: '您好 {{user_name}}，我是 BingoPlus VIP 专属客服。注意到您近期较少登录，为您准备了专属回归礼包，价值 {{bonus_amount}}，请问方便了解一下吗？', buttonText: '确认意向' },
@@ -171,7 +172,7 @@ let TEMPLATE_RECORDS = [
     ],
   },
   {
-    id: 'tpl-013', name: '邮箱验证激活', code: 'TPL-EMAIL-0022', type: '通知类', channel: '邮件',
+    id: 'tpl-013', name: '邮箱验证激活', code: 'TPL-EMAIL-0022', type: 'OTP', channel: '邮件',
     langs: '英文', bizLine: 'BingoPlus', status: 'active', creator: 'marvin@',
     createdAt: '2026-07-02 16:10', updatedAt: '2026-07-12 23:50', updatedBy: 'marvin@',
     content: { subject: 'Verify Your Email', subtitle: 'One step away from full access', body: 'Hi {{user_name}}, please verify your email address to unlock all features. This link expires on {{expire_time}}.', ctaText: 'Verify Email', ctaLink: 'https://bingoplus.com/verify' },
@@ -185,7 +186,7 @@ let TEMPLATE_RECORDS = [
     ],
   },
   {
-    id: 'tpl-014', name: '首充引导话术', code: 'TPL-SMS-0033', type: '生命周期类', channel: 'SMS',
+    id: 'tpl-014', name: '首充引导话术', code: 'TPL-SMS-0033', type: '营销', channel: 'SMS',
     langs: '中文', bizLine: 'BingoPlus', status: 'draft', creator: 'lily@',
     createdAt: '2026-07-08 10:40', updatedAt: '2026-07-08 10:40', updatedBy: 'lily@',
     content: { text: '完成首充最高可得 100% 加赠，新手专享仅此一次！立即充值 {{bonus_amount}} 起。', hasShortLink: true, signature: 'BPLUS' },
@@ -198,7 +199,7 @@ let TEMPLATE_RECORDS = [
     ],
   },
   {
-    id: 'tpl-015', name: '周末大促 Push', code: 'TPL-PUSH-0044', type: '营销类', channel: 'Push',
+    id: 'tpl-015', name: '周末大促 Push', code: 'TPL-PUSH-0044', type: '营销', channel: 'Push',
     langs: '英文', bizLine: 'ArenaPlus', status: 'rejected', creator: 'ken@',
     createdAt: '2026-07-09 11:00', updatedAt: '2026-07-10 09:15', updatedBy: 'marvin@',
     content: { title: 'Weekend Mega Sale', body: 'Deposit now and get up to 10% bonus! Limited time only.', link: 'arenplus://promo', imageHint: '促销 Banner' },
@@ -209,7 +210,7 @@ let TEMPLATE_RECORDS = [
     ],
   },
   {
-    id: 'tpl-016', name: '验证码通知', code: 'TPL-SMS-0001', type: '通知类', channel: 'SMS',
+    id: 'tpl-016', name: '验证码通知', code: 'TPL-SMS-0001', type: 'OTP', channel: 'SMS',
     langs: '中文', bizLine: 'BingoPlus', status: 'active', creator: 'marvin@',
     createdAt: '2026-05-10 09:00', updatedAt: '2026-06-30 14:30', updatedBy: 'marvin@',
     content: { text: 'Your verification code is {{verify_code}}. Valid for 5 minutes. Do not share with anyone.', hasShortLink: false, signature: 'BPLUS' },
@@ -223,7 +224,7 @@ let TEMPLATE_RECORDS = [
     ],
   },
   {
-    id: 'tpl-017', name: '站内信活动预告', code: 'TPL-INBOX-0011', type: '运营活动类', channel: 'Inbox',
+    id: 'tpl-017', name: '站内信活动预告', code: 'TPL-INBOX-0011', type: '营销', channel: 'Inbox',
     langs: '中文', bizLine: 'BingoPlus', status: 'draft', creator: 'ken@',
     createdAt: '2026-07-11 15:00', updatedAt: '2026-07-11 15:00', updatedBy: 'ken@',
     content: { title: '七月大促即将开启', body: '七月大促活动将于 {{expire_time}} 正式开启，提前锁定您的优惠名额！', buttonText: '预约提醒' },
@@ -236,7 +237,7 @@ let TEMPLATE_RECORDS = [
     ],
   },
   {
-    id: 'tpl-018', name: 'IM 充值成功通知', code: 'TPL-IM-0020', type: '通知类', channel: 'IM',
+    id: 'tpl-018', name: 'IM 充值成功通知', code: 'TPL-IM-0020', type: 'OTP', channel: 'IM',
     langs: '中文', bizLine: 'BingoPlus', status: 'disabled', creator: 'lily@',
     createdAt: '2026-06-22 10:30', updatedAt: '2026-07-01 14:22', updatedBy: 'marvin@',
     content: { title: '充值成功', body: '您已成功充值 {{bonus_amount}}，账户余额已更新。感谢您的支持！', buttonText: '查看余额' },
@@ -573,7 +574,7 @@ function renderDrawerBody(tpl, mode, scrollToVersions) {
       <div class="field-row-2">
         <div class="field"><span class="field-label">模板类型</span>
           <select class="select" id="fTplType">
-            ${['营销类','通知类','生命周期类','促活类','召回类','运营活动类'].map(t =>
+            ${TEMPLATE_TYPES.map(t =>
               `<option${t === tpl.type ? ' selected' : ''}>${t}</option>`).join('')}
           </select></div>
         <div class="field"><span class="field-label">通道类型</span>
@@ -715,7 +716,7 @@ function defaultContent(channel) {
 
 function newTemplateDraft() {
   return {
-    id: null, name: '', code: '', type: '营销类', channel: 'SMS', langs: '中文',
+    id: null, name: '', code: '', type: '营销', channel: 'SMS', langs: '中文',
     bizLine: 'BingoPlus', status: 'draft', creator: 'marvin@',
     createdAt: '', updatedAt: '', updatedBy: 'marvin@',
     content: defaultContent('SMS'), variables: [],

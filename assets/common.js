@@ -337,3 +337,125 @@ function bindMoreMenus(root = document) {
     });
   });
 }
+
+/* ---------------- 拖拽 / 粘贴上传 ---------------- */
+
+function matchFileAccept(file, accept) {
+  if (!accept) return true;
+  const name = (file.name || '').toLowerCase();
+  const type = file.type || '';
+  return accept.split(',').map(s => s.trim()).filter(Boolean).some(rule => {
+    if (rule.startsWith('.')) return name.endsWith(rule.toLowerCase());
+    if (rule.endsWith('/*')) return type.startsWith(rule.slice(0, -1));
+    return type === rule;
+  });
+}
+
+async function readAllDirEntries(reader) {
+  const entries = [];
+  let batch;
+  do {
+    batch = await new Promise((resolve, reject) => reader.readEntries(resolve, reject));
+    entries.push(...batch);
+  } while (batch.length);
+  return entries;
+}
+
+async function countEntryFiles(entry) {
+  if (entry.isFile) return 1;
+  if (!entry.isDirectory) return 0;
+  const children = await readAllDirEntries(entry.createReader());
+  let count = 0;
+  for (const child of children) count += await countEntryFiles(child);
+  return count;
+}
+
+async function collectDroppedUploads(dataTransfer, { accept, allowFolder = false } = {}) {
+  const files = [];
+  const folders = [];
+  const items = [...(dataTransfer?.items || [])];
+
+  if (items.length) {
+    for (const item of items) {
+      if (item.kind !== 'file') continue;
+      const entry = item.webkitGetAsEntry?.();
+      if (entry?.isDirectory) {
+        if (!allowFolder) continue;
+        folders.push({ name: entry.name, count: await countEntryFiles(entry) });
+      } else if (entry?.isFile) {
+        const file = await new Promise((resolve, reject) => entry.file(resolve, reject));
+        if (matchFileAccept(file, accept)) files.push(file);
+      } else {
+        const file = item.getAsFile();
+        if (file && matchFileAccept(file, accept)) files.push(file);
+      }
+    }
+  } else {
+    [...(dataTransfer?.files || [])].forEach(file => {
+      if (matchFileAccept(file, accept)) files.push(file);
+    });
+  }
+  return { files, folders };
+}
+
+function collectPastedFiles(dataTransfer, accept) {
+  const files = [];
+  [...(dataTransfer?.items || [])].forEach(item => {
+    if (item.kind !== 'file') return;
+    const file = item.getAsFile();
+    if (file && matchFileAccept(file, accept)) files.push(file);
+  });
+  return files;
+}
+
+function bindDropPasteUpload({
+  zone,
+  accept,
+  allowFolder = false,
+  allowPaste = true,
+  onFiles,
+  onFolders,
+}) {
+  if (!zone) return () => {};
+
+  if (!zone.hasAttribute('tabindex')) zone.setAttribute('tabindex', '0');
+
+  const prevent = e => { e.preventDefault(); e.stopPropagation(); };
+
+  const onDragEnter = e => prevent(e);
+  const onDragOver = e => {
+    prevent(e);
+    zone.classList.add('is-dragover');
+  };
+  const onDragLeave = e => {
+    if (!zone.contains(e.relatedTarget)) zone.classList.remove('is-dragover');
+  };
+  const onDrop = async e => {
+    prevent(e);
+    zone.classList.remove('is-dragover');
+    const { files, folders } = await collectDroppedUploads(e.dataTransfer, { accept, allowFolder });
+    if (files.length) onFiles?.(files);
+    if (folders.length) onFolders?.(folders);
+  };
+  const onPaste = e => {
+    const files = collectPastedFiles(e.clipboardData, accept);
+    if (!files.length) return;
+    e.preventDefault();
+    onFiles?.(files);
+  };
+
+  zone.addEventListener('dragenter', onDragEnter);
+  zone.addEventListener('dragover', onDragOver);
+  zone.addEventListener('dragleave', onDragLeave);
+  zone.addEventListener('drop', onDrop);
+  if (allowPaste) zone.addEventListener('paste', onPaste);
+
+  return () => {
+    zone.removeEventListener('dragenter', onDragEnter);
+    zone.removeEventListener('dragover', onDragOver);
+    zone.removeEventListener('dragleave', onDragLeave);
+    zone.removeEventListener('drop', onDrop);
+    if (allowPaste) zone.removeEventListener('paste', onPaste);
+    zone.classList.remove('is-dragover');
+  };
+}

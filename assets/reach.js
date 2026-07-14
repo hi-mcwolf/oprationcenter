@@ -291,18 +291,21 @@ function openPanel(type) {
     panel.innerHTML = `
       <div class="panel-title">选择人群</div>
       <p class="panel-hint">星灵标签与上传至少选择 1 项</p>
-      <div class="field">
-        <span class="field-label">星灵标签（可搜索多选）</span>
+      <div class="tabs" id="audTabs">
+        <button type="button" class="tab active" data-aud-tab="tags">星灵标签</button>
+        <button type="button" class="tab" data-aud-tab="upload">上传</button>
+      </div>
+      <div class="tab-pane" id="audPaneTags">
         <div id="audTagMsel"></div>
       </div>
-      <div class="field">
-        <span class="field-label">上传</span>
-        <div class="upload-area">
+      <div class="tab-pane" hidden id="audPaneUpload">
+        <div class="upload-area" tabindex="0">
           <div class="upload-btns">
             <button type="button" class="btn btn-outline btn-sm" id="uploadFileBtn"><i data-lucide="file-up"></i>上传文件</button>
             <button type="button" class="btn btn-outline btn-sm" id="uploadFolderBtn"><i data-lucide="folder-up"></i>上传文件夹</button>
             <a class="link-btn" id="downloadTplBtn"><i data-lucide="download"></i>模板下载</a>
           </div>
+          <p class="upload-drop-hint">支持拖拽或粘贴文件、文件夹到此处上传</p>
           <input type="file" id="uploadFileInput" accept=".csv,.xlsx,.txt" hidden>
           <input type="file" id="uploadFolderInput" webkitdirectory hidden>
           <ul class="upload-list" id="uploadList"></ul>
@@ -313,6 +316,19 @@ function openPanel(type) {
         <button type="button" class="btn btn-primary" id="panelOk">确认</button>
       </div>`;
 
+    const defaultAudTab = draft.audienceFiles.length && !draft.audienceTags.length ? 'upload' : 'tags';
+    const switchAudTab = tab => {
+      panel.querySelectorAll('#audTabs .tab').forEach(t => {
+        t.classList.toggle('active', t.dataset.audTab === tab);
+      });
+      panel.querySelector('#audPaneTags').hidden = tab !== 'tags';
+      panel.querySelector('#audPaneUpload').hidden = tab !== 'upload';
+    };
+    switchAudTab(defaultAudTab);
+    panel.querySelectorAll('#audTabs .tab').forEach(tab => {
+      tab.addEventListener('click', () => switchAudTab(tab.dataset.audTab));
+    });
+
     panelAudienceMsel = createSearchMultiSelect({
       container: panel.querySelector('#audTagMsel'),
       options: AUDIENCES.map(a => ({
@@ -321,7 +337,7 @@ function openPanel(type) {
         desc: `${a.count.toLocaleString()} 人`,
       })),
       selected: draft.audienceTags,
-      placeholder: '搜索并选择星灵标签',
+      placeholder: '请选择星灵标签',
       searchPlaceholder: '搜索标签…',
     });
 
@@ -342,20 +358,37 @@ function openPanel(type) {
 
     const fileInput = panel.querySelector('#uploadFileInput');
     const folderInput = panel.querySelector('#uploadFolderInput');
+    const uploadArea = panel.querySelector('.upload-area');
+    const audienceAccept = '.csv,.xlsx,.txt';
+
+    const addUploadedFiles = files => {
+      files.forEach(f => pendingFiles.push(f.name));
+      renderUploadList();
+    };
+    const addUploadedFolders = folders => {
+      folders.forEach(({ name, count }) => pendingFiles.push(`${name}/（${count} 个文件）`));
+      renderUploadList();
+    };
+
     panel.querySelector('#uploadFileBtn').addEventListener('click', () => fileInput.click());
     panel.querySelector('#uploadFolderBtn').addEventListener('click', () => folderInput.click());
     fileInput.addEventListener('change', () => {
-      [...fileInput.files].forEach(f => pendingFiles.push(f.name));
+      addUploadedFiles([...fileInput.files].filter(f => matchFileAccept(f, audienceAccept)));
       fileInput.value = '';
-      renderUploadList();
     });
     folderInput.addEventListener('change', () => {
       if (folderInput.files.length) {
         const dir = folderInput.files[0].webkitRelativePath.split('/')[0];
-        pendingFiles.push(`${dir}/（${folderInput.files.length} 个文件）`);
+        addUploadedFolders([{ name: dir, count: folderInput.files.length }]);
       }
       folderInput.value = '';
-      renderUploadList();
+    });
+    bindDropPasteUpload({
+      zone: uploadArea,
+      accept: audienceAccept,
+      allowFolder: true,
+      onFiles: addUploadedFiles,
+      onFolders: addUploadedFolders,
     });
     panel.querySelector('#downloadTplBtn').addEventListener('click', () => showToast('人群上传模板已开始下载'));
 

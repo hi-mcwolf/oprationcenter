@@ -101,7 +101,7 @@ document.addEventListener('DOMContentLoaded', () => {
     channelContents.tele = copy;
     activeContentChannel = 'sms';
     renderContentTabs();
-    showToast('已采纳建议：短信、电销通道及示例文案已填入');
+    showToast('已采纳建议：短信通道及示例文案已填入');
   });
 
   // 模板选择（作用于当前通道）

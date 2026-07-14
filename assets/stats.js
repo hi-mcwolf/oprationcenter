@@ -238,7 +238,6 @@ function renderTable() {
   document.getElementById('taskTableBody').innerHTML = rows.map(r => `
     <tr>
       <td>${r.name}</td>
-      <td>${r.type}</td>
       <td>${r.channel}</td>
       <td>${r.partner}</td>
       <td class="cell-muted">${r.time}</td>
