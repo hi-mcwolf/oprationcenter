@@ -77,25 +77,31 @@ function initDraft(channel) {
 }
 
 function updateGreeting() {
+  const greeting = document.getElementById('greeting');
+  const greetSub = document.getElementById('greetSub');
+  if (!greeting || !greetSub) return;
   const h = new Date().getHours();
   const part = h < 11 ? '早上' : h < 14 ? '中午' : '晚上';
-  document.getElementById('greeting').textContent = `${part}好，尊敬的 marvin@ 指挥官`;
-  document.getElementById('greetSub').innerHTML =
+  greeting.textContent = `${part}好，尊敬的 marvin@ 指挥官`;
+  greetSub.innerHTML =
     `您当前共有 <b>${tasks.length}</b> 个任务在执行，您可以点击左侧展示区新建触达任务`;
 }
 
 function updatePhoneClock() {
+  const phoneTime = document.getElementById('phoneTime');
+  const phoneDate = document.getElementById('phoneDate');
+  if (!phoneTime || !phoneDate) return;
   const now = new Date();
   const pad = n => String(n).padStart(2, '0');
-  document.getElementById('phoneTime').textContent = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
-  document.getElementById('phoneDate').textContent =
+  phoneTime.textContent = `${pad(now.getHours())}:${pad(now.getMinutes())}`;
+  phoneDate.textContent =
     `${now.getMonth() + 1}月${now.getDate()}日 星期${'日一二三四五六'[now.getDay()]}`;
 }
 
 function bindPhoneScreen() {
   const screen = document.getElementById('phoneScreen');
   const tip = document.getElementById('cursorTip');
-
+  if (!screen || !tip) return;
   screen.addEventListener('mousemove', e => {
     const item = e.target.closest('.app-item');
     tip.textContent = item
@@ -520,25 +526,34 @@ function createTask() {
   showToast('已提交审批');
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-  renderSidebar('reach', 'reach-task');
-  renderTopbar();
-  bindDrawerClose();
-  updateGreeting();
-  updatePhoneClock();
-  setInterval(updatePhoneClock, 30 * 1000);
-  bindPhoneScreen();
-
-  document.getElementById('rowAudience').addEventListener('click', () => openPanel('audience'));
-  document.getElementById('rowTiming').addEventListener('click', () => openPanel('timing'));
-  document.getElementById('rowContent').addEventListener('click', () => openPanel('content'));
-  document.getElementById('ntName').addEventListener('input', () => {
+function bindTaskDrawer() {
+  document.getElementById('rowAudience')?.addEventListener('click', () => openPanel('audience'));
+  document.getElementById('rowTiming')?.addEventListener('click', () => openPanel('timing'));
+  document.getElementById('rowContent')?.addEventListener('click', () => openPanel('content'));
+  document.getElementById('ntName')?.addEventListener('input', () => {
     if (draft && draft.active === 'email') renderPreview();
   });
   document.querySelectorAll('input[name="taskType"]').forEach(r => {
     r.addEventListener('change', () => { if (draft) draft.taskType = r.value; });
   });
-  document.getElementById('createTaskBtn').addEventListener('click', createTask);
+  document.getElementById('createTaskBtn')?.addEventListener('click', createTask);
+}
 
-  refreshIcons();
+document.addEventListener('DOMContentLoaded', () => {
+  const isReachPage = !!document.getElementById('phoneScreen');
+
+  if (isReachPage) {
+    renderSidebar('reach', 'reach-task');
+    renderTopbar();
+    bindDrawerClose();
+    updateGreeting();
+    updatePhoneClock();
+    setInterval(updatePhoneClock, 30 * 1000);
+    bindPhoneScreen();
+    refreshIcons();
+  }
+
+  if (document.getElementById('taskDrawer')) {
+    bindTaskDrawer();
+  }
 });
