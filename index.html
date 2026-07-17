@@ -16,9 +16,6 @@
 
           <header class="home-header">
             <h1 class="home-title"><i data-lucide="layout-dashboard"></i>运营中心</h1>
-            <button type="button" class="btn btn-primary home-new-btn" id="homeNewBtn">
-              <i data-lucide="plus"></i>新建
-            </button>
           </header>
 
           <div class="home-main">
@@ -97,9 +94,10 @@
                     <div class="oc-msg-bubble">
                       <p id="homeGreeting">晚上好，尊敬的 marvin@ 指挥官！</p>
                       <p>当前 <strong>GAME 页</strong> 共有 <strong>3 个资源位组</strong>、<strong>7 个资源位</strong>。</p>
+                      <p>当前共有 <strong>3 个触达策略</strong>在执行，<a href="javascript:;" class="oc-link" data-oc-action="查看触达执行">点此查看</a></p>
                       <p>您可以点击左侧展示区 <a href="javascript:;" class="oc-link" data-oc-action="新建">新建</a> / <a href="javascript:;" class="oc-link" data-oc-action="查看相关策略">查看相关策略</a>。</p>
                       <p>您可以：调整首页页面布局、调整 banner、调整弹窗，以及点击资源位查看/调整策略。</p>
-                      <p>您还可以配置落地页、配置营销活动，或选择其他页面或模块操作。</p>
+                      <p>您还可以配置落地页、配置营销活动、<a href="javascript:;" class="oc-link" data-oc-action="配置触达">配置触达</a>，或选择其他页面或模块操作。</p>
                     </div>
                   </div>
                 </article>
@@ -162,7 +160,7 @@
     <div class="drawer-mask" data-close></div>
     <aside class="drawer drawer-xl">
       <header class="drawer-header">
-        <h3>新建任务</h3>
+        <h3>新建</h3>
         <button class="icon-btn" data-close aria-label="关闭"><i data-lucide="x"></i></button>
       </header>
 
@@ -174,8 +172,8 @@
 
         <section class="nt-config">
           <div class="field">
-            <span class="field-label">任务名称</span>
-            <input class="input" id="ntName" placeholder="请输入任务名称">
+            <span class="field-label">名称</span>
+            <input class="input" id="ntName" placeholder="请输入名称">
           </div>
 
           <div class="field">
@@ -196,7 +194,7 @@
           </div>
 
           <div class="field">
-            <span class="field-label">人群</span>
+            <span class="field-label">人群（Who）</span>
             <div class="cfg-row" id="rowAudience">
               <div class="cfg-value" id="audienceValue"><span class="placeholder">请选择人群</span></div>
               <i data-lucide="chevron-right"></i>
@@ -204,11 +202,11 @@
           </div>
 
           <div class="field">
-            <span class="field-label">通道</span>
+            <span class="field-label">通道（Where）</span>
             <div class="tabs" id="ntTabs"></div>
 
             <div class="field">
-              <span class="field-label">时机</span>
+              <span class="field-label">时机（When）</span>
               <div class="cfg-row" id="rowTiming">
                 <div class="cfg-value" id="timingValue"><span class="placeholder">请选择发送时机</span></div>
                 <i data-lucide="chevron-right"></i>
@@ -216,7 +214,7 @@
             </div>
 
             <div class="field">
-              <span class="field-label">内容</span>
+              <span class="field-label">内容（What）</span>
               <div class="cfg-row" id="rowContent">
                 <div class="cfg-value" id="contentValue"><span class="placeholder">请配置发送内容</span></div>
                 <i data-lucide="chevron-right"></i>

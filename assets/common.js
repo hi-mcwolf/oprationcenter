@@ -1,6 +1,6 @@
 /* 公共逻辑：左侧伸缩菜单渲染、抽屉开关、Toast */
 
-const NAV_ITEMS = [
+const OPS_NAV_ITEMS = [
   { key: 'home', label: '首页', icon: 'house', href: 'index.html' },
   {
     key: 'lifecycle', label: '生命周期经营', icon: 'repeat',
@@ -14,17 +14,6 @@ const NAV_ITEMS = [
     children: [
       { key: 'content-assets', label: '素材库', href: 'javascript:;' },
       { key: 'content-review', label: '内容审核', href: 'javascript:;' },
-    ],
-  },
-  {
-    key: 'reach', label: '触达', icon: 'send',
-    children: [
-      { key: 'reach-task', label: '触达任务', href: 'reach.html' },
-      { key: 'reach-task-records', label: '任务记录', href: 'task-records.html' },
-      { key: 'reach-send-records', label: '发送记录', href: 'send-records.html' },
-      { key: 'reach-template', label: '模板管理', href: 'templates.html' },
-      { key: 'reach-strategy', label: '触达策略', href: 'strategy.html' },
-      { key: 'reach-stats', label: '数据统计', href: 'stats.html' },
     ],
   },
   {
@@ -43,6 +32,15 @@ const NAV_ITEMS = [
   },
 ];
 
+const REACH_NAV_ITEMS = [
+  { key: 'reach-task', label: '触达任务', icon: 'send', href: 'reach.html' },
+  { key: 'reach-task-records', label: '任务记录', icon: 'clipboard-list', href: 'task-records.html' },
+  { key: 'reach-send-records', label: '发送记录', icon: 'mail-check', href: 'send-records.html' },
+  { key: 'reach-template', label: '模板管理', icon: 'file-text', href: 'templates.html' },
+  { key: 'reach-strategy', label: '触达策略', icon: 'sliders-horizontal', href: 'strategy.html' },
+  { key: 'reach-stats', label: '数据统计', icon: 'bar-chart-3', href: 'stats.html' },
+];
+
 const PRODUCT_LINES = [
   { value: 'BP-VIP', label: 'BP-VIP' },
   { value: 'BP-CONTENT OPERATION CENTER', label: 'BP-CONTENT OPERATION CENTER' },
@@ -54,37 +52,50 @@ const USER_ACCOUNT_SAMPLES = [
   'bingoplusana04', 'bingopluspaolo05', 'bingoplusgrace06',
 ];
 
-function renderSidebar(activeKey, activeSubKey) {
+function renderOpsSidebarItems(items, activeKey, activeSubKey) {
+  return items.map(item => {
+    if (!item.children) {
+      return `<a class="sb-item${item.key === activeKey ? ' active' : ''}" href="${item.href}">
+        <i data-lucide="${item.icon}"></i>${item.label}
+      </a>`;
+    }
+    const isActive = item.key === activeKey;
+    return `
+      <div class="menu-group${isActive ? ' open' : ''}" data-group="${item.key}">
+        <button class="sb-item sb-toggle${isActive ? ' active' : ''}">
+          <i data-lucide="${item.icon}"></i>${item.label}
+          <i data-lucide="chevron-down" class="chev"></i>
+        </button>
+        <div class="submenu">
+          ${item.children.map(sub => `
+            <a class="sub-item${sub.key === activeSubKey ? ' active' : ''}" href="${sub.href}">${sub.label}</a>
+          `).join('')}
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function renderSidebar(module, activeKey, activeSubKey) {
   const host = document.getElementById('sidebar');
   if (!host) return;
   host.className = 'sidebar';
+
+  let menuHtml;
+  if (module === 'reach') {
+    menuHtml = REACH_NAV_ITEMS.map(item =>
+      `<a class="sb-item${item.key === activeKey ? ' active' : ''}" href="${item.href}">
+        <i data-lucide="${item.icon}"></i>${item.label}
+      </a>`
+    ).join('');
+  } else {
+    menuHtml = renderOpsSidebarItems(OPS_NAV_ITEMS, activeKey, activeSubKey);
+  }
+
   host.innerHTML = `
     <div class="sb-brand"><i data-lucide="layout-grid"></i>Digiplus</div>
-    <nav class="sb-menu">
-      ${NAV_ITEMS.map(item => {
-        if (!item.children) {
-          return `<a class="sb-item${item.key === activeKey ? ' active' : ''}" href="${item.href}">
-            <i data-lucide="${item.icon}"></i>${item.label}
-          </a>`;
-        }
-        const isActive = item.key === activeKey;
-        return `
-          <div class="menu-group${isActive ? ' open' : ''}" data-group="${item.key}">
-            <button class="sb-item sb-toggle${isActive ? ' active' : ''}">
-              <i data-lucide="${item.icon}"></i>${item.label}
-              <i data-lucide="chevron-down" class="chev"></i>
-            </button>
-            <div class="submenu">
-              ${item.children.map(sub => `
-                <a class="sub-item${sub.key === activeSubKey ? ' active' : ''}" href="${sub.href}">${sub.label}</a>
-              `).join('')}
-            </div>
-          </div>`;
-      }).join('')}
-    </nav>
+    <nav class="sb-menu">${menuHtml}</nav>
   `;
 
-  // 点击一级菜单伸缩子菜单（手风琴：展开一项时收起其他项）
   host.querySelectorAll('.sb-toggle').forEach(btn => {
     btn.addEventListener('click', () => {
       const group = btn.closest('.menu-group');
@@ -95,27 +106,19 @@ function renderSidebar(activeKey, activeSubKey) {
   });
 }
 
-function renderTopbar() {
+function renderTopbar(activeModule = 'ops') {
   const host = document.getElementById('topbar');
   if (!host) return;
   host.className = 'topbar';
   host.innerHTML = `
     <nav class="topbar-menu">
-      <a class="topbar-item active" href="javascript:;">运营中心</a>
+      <a class="topbar-item${activeModule === 'ops' ? ' active' : ''}" href="index.html">运营中心</a>
+      <a class="topbar-item${activeModule === 'reach' ? ' active' : ''}" href="reach.html">触达管理</a>
     </nav>
     <div class="topbar-actions">
-      <button class="btn btn-outline btn-sm" id="sdkBtn" type="button">SDK</button>
       <div class="topbar-user"><span class="avatar">M</span>marvin@</div>
     </div>
   `;
-  const sdkBtn = host.querySelector('#sdkBtn');
-  if (sdkBtn && !sdkBtn.dataset.bound) {
-    sdkBtn.dataset.bound = '1';
-    sdkBtn.addEventListener('click', () => {
-      if (typeof initReachConfigDrawer === 'function') initReachConfigDrawer();
-      openDrawer('reachDrawer');
-    });
-  }
 }
 
 function tipIcon(tipText) {

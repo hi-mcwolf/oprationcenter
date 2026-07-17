@@ -2128,19 +2128,6 @@ select.ssel-native {
   color: var(--primary);
 }
 
-.home-new-btn {
-  border-radius: 12px;
-  padding: 8px 18px;
-  font-size: 14px;
-  font-weight: 500;
-  gap: 6px;
-}
-
-.home-new-btn .lucide {
-  width: 16px;
-  height: 16px;
-}
-
 .home-main {
   flex: 1;
   display: flex;

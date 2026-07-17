@@ -801,7 +801,7 @@ function openTplDrawer(mode, id, scrollToVersions) {
 /* ---------------- 初始化 ---------------- */
 document.addEventListener('DOMContentLoaded', () => {
   renderSidebar('reach', 'reach-template');
-  renderTopbar();
+  renderTopbar('reach');
   bindDrawerClose();
 
   document.querySelectorAll('#catChips .chip').forEach(chip => {

@@ -502,7 +502,7 @@ function openPanel(type) {
 
 function createTask() {
   const name = document.getElementById('ntName').value.trim();
-  if (!name) { showToast('请输入任务名称'); return; }
+  if (!name) { showToast('请输入名称'); return; }
   if (!document.getElementById('ntProductLine').value) { showToast('请选择产品线'); return; }
   draft.taskType = document.querySelector('input[name="taskType"]:checked')?.value || 'manual';
   if (!draft.audienceTags.length && !draft.audienceFiles.length) {
@@ -544,7 +544,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (isReachPage) {
     renderSidebar('reach', 'reach-task');
-    renderTopbar();
+    renderTopbar('reach');
     bindDrawerClose();
     updateGreeting();
     updatePhoneClock();

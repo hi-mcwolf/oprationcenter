@@ -313,7 +313,7 @@ function openStrategyDetail(id) {
 /* ---------------- 初始化 ---------------- */
 document.addEventListener('DOMContentLoaded', () => {
   renderSidebar('reach', 'reach-strategy');
-  renderTopbar();
+  renderTopbar('reach');
   bindDrawerClose();
 
   document.getElementById('detailEditBtn').addEventListener('click', () => showToast('编辑策略（原型演示）'));

@@ -297,7 +297,7 @@ function touchUpdateTime() {
 /* ---------------- 初始化 ---------------- */
 document.addEventListener('DOMContentLoaded', () => {
   renderSidebar('reach', 'reach-stats');
-  renderTopbar();
+  renderTopbar('reach');
 
   trendChart = echarts.init(document.getElementById('trendChart'));
   channelChart = echarts.init(document.getElementById('channelChart'));

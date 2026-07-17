@@ -436,7 +436,7 @@ function openTaskDetail(id) {
 /* ---------------- 初始化 ---------------- */
 document.addEventListener('DOMContentLoaded', () => {
   renderSidebar('reach', 'reach-task-records');
-  renderTopbar();
+  renderTopbar('reach');
   bindDrawerClose();
 
   // 触达策略筛选项（来自共享数据）

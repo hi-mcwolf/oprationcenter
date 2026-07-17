@@ -308,7 +308,7 @@ function openSendDetail(recordId) {
 
 document.addEventListener('DOMContentLoaded', () => {
   renderSidebar('reach', 'reach-send-records');
-  renderTopbar();
+  renderTopbar('reach');
   bindDrawerClose();
 
   productLineFilter = createSearchMultiSelect({

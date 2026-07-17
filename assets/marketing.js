@@ -71,8 +71,8 @@ function initStrategyMultiSelect() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  renderSidebar('marketing', 'marketing-campaign');
-  renderTopbar();
+  renderSidebar('ops');
+  renderTopbar('ops');
   bindDrawerClose();
 
   // 打开抽屉
