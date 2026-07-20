@@ -111,22 +111,12 @@ function renderTopbar(activeModule = 'ops') {
   host.className = 'topbar';
   host.innerHTML = `
     <nav class="topbar-menu">
-      <a class="topbar-item${activeModule === 'ops' ? ' active' : ''}" href="index.html">运营中心</a>
-      <a class="topbar-item${activeModule === 'reach' ? ' active' : ''}" href="task-records.html">触达管理</a>
+      <a class="topbar-item active" href="index.html">运营中心</a>
     </nav>
     <div class="topbar-actions">
-      <button class="btn btn-outline btn-sm" id="sdkBtn" type="button">SDK</button>
       <div class="topbar-user"><span class="avatar">M</span>marvin@</div>
     </div>
   `;
-  const sdkBtn = host.querySelector('#sdkBtn');
-  if (sdkBtn && !sdkBtn.dataset.bound) {
-    sdkBtn.dataset.bound = '1';
-    sdkBtn.addEventListener('click', () => {
-      if (typeof initReachConfigDrawer === 'function') initReachConfigDrawer();
-      openDrawer('reachDrawer');
-    });
-  }
 }
 
 function tipIcon(tipText) {
