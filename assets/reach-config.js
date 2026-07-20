@@ -1,21 +1,27 @@
 /* SDK 触达配置抽屉（全局挂载，由 topbar SDK 按钮打开） */
 
+const RC_TEMPLATES = {
+  quiz: "Only the best teams remain! Warm up for the Quarterfinals with today's FREE World Cup Quiz. Visit bingoplus.com.",
+  recharge: '尊敬的用户，本周充值满 500 即享 8% 加赠，活动今晚 24:00 截止，立即打开 App 参与吧！',
+  recall: '您好，我们注意到您已有一段时间未登录。现为您专属保留了回归礼包，登录即可领取，期待您的回来！',
+};
+
 const RC_CHANNEL_LABELS = {
   sms: 'SMS', email: '邮件', push: 'Push',
-  viber: 'Viber', telegram: 'Telegram', messenger: 'Messenger',
+  viber: 'Viber', telegram: 'Telegram',
 };
 
 const rcChannelContents = {};
 let rcActiveChannel = null;
-let rcEditor = null;
 
 function selectedRcChannels() {
-  return [...document.querySelectorAll('#channelChips .chip.selected')].map(c => c.dataset.channel);
+  return [...document.querySelectorAll('#reachDrawer #channelChips .chip.selected')].map(c => c.dataset.channel);
 }
 
 function saveRcActiveContent() {
-  if (rcActiveChannel && rcEditor) {
-    rcChannelContents[rcActiveChannel] = rcEditor.getValue();
+  if (rcActiveChannel) {
+    const ta = document.getElementById('contentText');
+    if (ta) rcChannelContents[rcActiveChannel] = ta.value;
   }
 }
 
@@ -23,21 +29,23 @@ function renderRcContentTabs() {
   const channels = selectedRcChannels();
   const tabsHost = document.getElementById('contentTabs');
   const empty = document.getElementById('contentTabsEmpty');
-  const editorHost = document.getElementById('contentEditorHost');
+  const ta = document.getElementById('contentText');
 
-  rcEditor?.destroy();
-  rcEditor = null;
+  if (!tabsHost || !empty || !ta) return;
 
   if (!channels.length) {
     rcActiveChannel = null;
     tabsHost.innerHTML = '';
     empty.hidden = false;
-    editorHost.innerHTML = '';
+    ta.hidden = true;
     return;
   }
 
   if (!channels.includes(rcActiveChannel)) rcActiveChannel = channels[0];
   empty.hidden = true;
+  ta.hidden = false;
+  ta.value = rcChannelContents[rcActiveChannel] || '';
+  ta.placeholder = `请输入「${RC_CHANNEL_LABELS[rcActiveChannel]}」通道的触达文案内容…`;
 
   tabsHost.innerHTML = channels.map(c =>
     `<button type="button" class="tab${c === rcActiveChannel ? ' active' : ''}" data-content-tab="${c}">${RC_CHANNEL_LABELS[c]}</button>`
@@ -49,14 +57,6 @@ function renderRcContentTabs() {
       rcActiveChannel = tab.dataset.contentTab;
       renderRcContentTabs();
     });
-  });
-
-  rcEditor = createContentEditor({
-    container: editorHost,
-    channel: rcActiveChannel,
-    value: rcChannelContents[rcActiveChannel],
-    showTemplateTools: true,
-    onChange: val => { rcChannelContents[rcActiveChannel] = val; },
   });
 }
 
@@ -70,33 +70,6 @@ function reachConfigDrawerHtml() {
         <button class="icon-btn" data-close aria-label="关闭"><i data-lucide="x"></i></button>
       </header>
       <div class="drawer-body drawer-body--gray">
-        <section class="card card-suggest">
-          <div class="suggest-head">
-            <span class="tag tag-ai"><i data-lucide="sparkles"></i>AI 触达建议</span>
-          </div>
-          <div class="suggest-meta">
-            <div class="meta-item">
-              <span class="meta-label">推荐通道</span>
-              <span class="tag tag-primary">短信</span>
-              <span class="tag tag-primary">Push</span>
-            </div>
-            <!-- <div class="meta-item">
-              <span class="meta-label">发送时机</span>
-              <span class="tag">活动开始前</span>
-            </div> -->
-          </div>
-          <div class="suggest-block">
-            <div class="suggest-line"><span class="suggest-key">示例文案</span></div>
-            <span class="suggest-copy" id="suggestCopy">Only the best teams remain! Warm up for the Quarterfinals with today's FREE World Cup Quiz. Visit bingoplus.com.</span>
-          </div>
-          <p class="suggest-basis">
-            基于 <em>"World Cup Group Stage Quiz"</em> 等任务的 <em>触达率 38.6%</em>
-            推荐采用 <em>短信</em> 通道，<!-- 在 <em>活动开始前 2 小时</em>--> 发送 <em>竞猜提醒类内容</em>
-          </p>
-          <div class="suggest-actions">
-            <button type="button" class="btn btn-primary" id="adoptBtn">采纳建议</button>
-          </div>
-        </section>
         <section class="card">
           <h4 class="card-title">触达通道及内容配置</h4>
           <div class="field">
@@ -107,51 +80,42 @@ function reachConfigDrawerHtml() {
               <button type="button" class="chip" data-channel="push">Push</button>
               <button type="button" class="chip" data-channel="viber">Viber</button>
               <button type="button" class="chip" data-channel="telegram">Telegram</button>
-              <button type="button" class="chip" data-channel="messenger">Messenger</button>
             </div>
           </div>
           <div class="field">
             <div class="field-label-row">
               <span class="field-label">内容配置</span>
+              <div class="field-tools">
+                <select class="select select-sm" id="tplSelect">
+                  <option value="">选择模板</option>
+                  <option value="quiz">世界杯竞猜提醒</option>
+                  <option value="recharge">充值优惠通知</option>
+                  <option value="recall">流失召回话术</option>
+                </select>
+                <button type="button" class="btn btn-outline btn-sm" id="saveTplBtn">保存为模板</button>
+              </div>
+            </div>
+            <div class="tpl-name-row" id="tplNameRow" hidden>
+              <input class="input" id="tplNameInput" placeholder="请输入模板名称">
+              <button type="button" class="btn btn-primary btn-sm" id="tplNameOk">保存</button>
+              <button type="button" class="btn btn-outline btn-sm" id="tplNameCancel">取消</button>
             </div>
             <div class="tabs content-tabs" id="contentTabs"></div>
             <p class="content-tabs-empty" id="contentTabsEmpty">请先在上方选择触达通道，再为每个通道单独配置内容</p>
-            <div id="contentEditorHost"></div>
-          </div>
-          <div class="field">
-            <span class="field-label">发送时间</span>
-            <div class="radio-group">
-              <label><input type="radio" name="sendMode" value="immediate" checked>立即</label>
-              <label><input type="radio" name="sendMode" value="scheduled">定时</label>
-              <label><input type="radio" name="sendMode" value="cycle">循环</label>
-            </div>
-            <div class="send-config" id="scheduledConfig" hidden>
-              <input type="datetime-local" class="input" id="sendDate" value="2026-07-10T10:00">
-            </div>
-            <div class="send-config" id="cycleConfig" hidden>
-              <select class="select" id="cycleFreq">
-                <option value="daily">每天</option>
-                <option value="weekly">每周</option>
-              </select>
-              <select class="select" id="cycleWeekday" hidden>
-                <option>周一</option><option>周二</option><option>周三</option>
-                <option>周四</option><option>周五</option><option>周六</option><option>周日</option>
-              </select>
-              <input type="time" class="input" id="cycleTime" value="10:00">
-            </div>
+            <textarea class="textarea" id="contentText" rows="5" placeholder="请输入触达文案内容…" hidden></textarea>
           </div>
         </section>
       </div>
       <footer class="drawer-footer">
-        <button class="btn btn-outline" data-close>取消</button>
-        <button class="btn btn-primary" id="confirmReach">确认</button>
+        <button type="button" class="btn btn-outline" data-close>取消</button>
+        <button type="button" class="btn btn-primary" id="confirmReach">确认</button>
       </footer>
     </aside>
   </div>`;
 }
 
 function bindReachConfigEvents() {
-  document.querySelectorAll('#channelChips .chip').forEach(chip => {
+  document.querySelectorAll('#reachDrawer #channelChips .chip').forEach(chip => {
     chip.addEventListener('click', () => {
       saveRcActiveContent();
       chip.classList.toggle('selected');
@@ -159,40 +123,40 @@ function bindReachConfigEvents() {
     });
   });
 
-  document.getElementById('adoptBtn').addEventListener('click', () => {
-    saveRcActiveContent();
-    document.querySelectorAll('#channelChips .chip').forEach(chip => {
-      chip.classList.toggle('selected', chip.dataset.channel === 'sms');
-    });
-    const copy = document.getElementById('suggestCopy').textContent.trim();
-    rcChannelContents.sms = { text: copy };
-    rcActiveChannel = 'sms';
-    renderRcContentTabs();
-    showToast('已采纳建议：短信通道及示例文案已填入');
+  document.getElementById('tplSelect').addEventListener('change', e => {
+    const tpl = RC_TEMPLATES[e.target.value];
+    if (!tpl) return;
+    if (!rcActiveChannel) { showToast('请先选择触达通道'); e.target.value = ''; return; }
+    document.getElementById('contentText').value = tpl;
+    rcChannelContents[rcActiveChannel] = tpl;
   });
 
-  document.querySelectorAll('input[name="sendMode"]').forEach(radio => {
-    radio.addEventListener('change', () => {
-      const mode = document.querySelector('input[name="sendMode"]:checked').value;
-      document.getElementById('scheduledConfig').hidden = mode !== 'scheduled';
-      document.getElementById('cycleConfig').hidden = mode !== 'cycle';
-    });
+  const tplNameRow = document.getElementById('tplNameRow');
+  document.getElementById('saveTplBtn').addEventListener('click', () => {
+    const content = document.getElementById('contentText').value.trim();
+    if (!rcActiveChannel || !content) { showToast('请先输入内容再保存为模板'); return; }
+    tplNameRow.hidden = false;
+    document.getElementById('tplNameInput').focus();
+  });
+  document.getElementById('tplNameOk').addEventListener('click', () => {
+    const name = document.getElementById('tplNameInput').value.trim();
+    if (!name) { showToast('请输入模板名称'); return; }
+    tplNameRow.hidden = true;
+    document.getElementById('tplNameInput').value = '';
+    showToast(`模板「${name}」已保存`);
+  });
+  document.getElementById('tplNameCancel').addEventListener('click', () => {
+    tplNameRow.hidden = true;
+    document.getElementById('tplNameInput').value = '';
   });
 
-  document.getElementById('cycleFreq').addEventListener('change', e => {
-    document.getElementById('cycleWeekday').hidden = e.target.value !== 'weekly';
-  });
+  document.getElementById('contentText').addEventListener('input', saveRcActiveContent);
 
   document.getElementById('confirmReach').addEventListener('click', () => {
     saveRcActiveContent();
     const channels = selectedRcChannels();
     if (!channels.length) { showToast('请至少选择一个触达通道'); return; }
-    const missing = channels.find(c => {
-      const v = rcChannelContents[c];
-      if (!v) return true;
-      const summary = contentSummary(v);
-      return !summary.trim();
-    });
+    const missing = channels.find(c => !(rcChannelContents[c] || '').trim());
     if (missing) { showToast(`请配置「${RC_CHANNEL_LABELS[missing]}」通道的发送内容`); return; }
     closeDrawer('reachDrawer');
     showToast('触达配置已保存');

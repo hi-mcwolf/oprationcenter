@@ -33,8 +33,7 @@ const OPS_NAV_ITEMS = [
 ];
 
 const REACH_NAV_ITEMS = [
-  { key: 'reach-task', label: '触达任务', icon: 'send', href: 'reach.html' },
-  { key: 'reach-task-records', label: '任务记录', icon: 'clipboard-list', href: 'task-records.html' },
+  { key: 'reach-task', label: '触达任务', icon: 'send', href: 'task-records.html' },
   { key: 'reach-send-records', label: '发送记录', icon: 'mail-check', href: 'send-records.html' },
   { key: 'reach-template', label: '模板管理', icon: 'file-text', href: 'templates.html' },
   { key: 'reach-strategy', label: '触达策略', icon: 'sliders-horizontal', href: 'strategy.html' },
@@ -113,12 +112,21 @@ function renderTopbar(activeModule = 'ops') {
   host.innerHTML = `
     <nav class="topbar-menu">
       <a class="topbar-item${activeModule === 'ops' ? ' active' : ''}" href="index.html">运营中心</a>
-      <a class="topbar-item${activeModule === 'reach' ? ' active' : ''}" href="reach.html">触达管理</a>
+      <a class="topbar-item${activeModule === 'reach' ? ' active' : ''}" href="task-records.html">触达管理</a>
     </nav>
     <div class="topbar-actions">
+      <button class="btn btn-outline btn-sm" id="sdkBtn" type="button">SDK</button>
       <div class="topbar-user"><span class="avatar">M</span>marvin@</div>
     </div>
   `;
+  const sdkBtn = host.querySelector('#sdkBtn');
+  if (sdkBtn && !sdkBtn.dataset.bound) {
+    sdkBtn.dataset.bound = '1';
+    sdkBtn.addEventListener('click', () => {
+      if (typeof initReachConfigDrawer === 'function') initReachConfigDrawer();
+      openDrawer('reachDrawer');
+    });
+  }
 }
 
 function tipIcon(tipText) {
