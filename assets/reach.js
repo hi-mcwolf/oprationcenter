@@ -71,7 +71,6 @@ function initDraft(channel) {
     r.checked = r.value === 'manual';
   });
   closePanel();
-  renderTabs();
   renderRows();
   renderPreview();
 }
@@ -123,46 +122,87 @@ function bindPhoneScreen() {
   });
 }
 
-function renderTabs() {
-  const host = document.getElementById('ntTabs');
+function saveActiveContentEditor() {
+  if (panelContentEditor && draft) {
+    draft.perChannel[draft.active].content = panelContentEditor.getValue();
+  }
+}
+
+function saveTimingFromPanel(panel) {
+  if (!panel || !draft) return;
+  const form = panel.querySelector('#ntTimingForm');
+  if (!form) return;
+  const sel = form.querySelector('input[name="ntTiming"]:checked')?.value || 'now';
+  draft.perChannel[draft.active].timing = {
+    type: sel,
+    datetime: form.querySelector('#ntDatetime')?.value,
+    freq: form.querySelector('#ntFreq')?.value,
+    weekday: form.querySelector('#ntWeekday')?.value,
+    time: form.querySelector('#ntTime')?.value,
+  };
+}
+
+function mountContentEditor(host) {
+  panelContentEditor?.destroy();
+  panelContentEditor = null;
+  if (!host || !draft) return;
+  panelContentEditor = createContentEditor({
+    container: host,
+    channel: draft.active,
+    value: draft.perChannel[draft.active].content,
+    showTemplateTools: true,
+    onChange: () => {
+      draft.perChannel[draft.active].content = panelContentEditor.getValue();
+      renderPreview();
+    },
+  });
+}
+
+function renderChannelTabs(container, handlers = {}) {
+  if (!container || !draft) return;
+  const { onBeforeSwitch, onAfterSwitch } = handlers;
   const remaining = Object.keys(CHANNELS).filter(c => !draft.channels.includes(c));
-  host.innerHTML = `
+  container.innerHTML = `
     ${draft.channels.map(c => `
       <button type="button" class="tab${c === draft.active ? ' active' : ''}" data-tab="${c}">${CHANNELS[c].tip}</button>
     `).join('')}
     ${remaining.length ? '<button type="button" class="tab-add" id="tabAdd" title="添加通道"><i data-lucide="plus"></i></button>' : ''}
   `;
 
-  host.querySelectorAll('.tab').forEach(tab => {
+  container.querySelectorAll('.tab').forEach(tab => {
     tab.addEventListener('click', () => {
-      draft.active = tab.dataset.tab;
-      closePanel();
-      renderTabs();
+      const c = tab.dataset.tab;
+      if (c === draft.active) return;
+      onBeforeSwitch?.();
+      draft.active = c;
+      onAfterSwitch?.();
+      renderChannelTabs(container, handlers);
       renderRows();
       renderPreview();
     });
   });
 
-  const addBtn = host.querySelector('#tabAdd');
+  const addBtn = container.querySelector('#tabAdd');
   if (addBtn) {
     addBtn.addEventListener('click', e => {
       e.stopPropagation();
-      const existing = host.querySelector('.popover');
+      const existing = container.querySelector('.popover');
       if (existing) { existing.remove(); return; }
       const pop = document.createElement('div');
       pop.className = 'popover';
       pop.innerHTML = remaining.map(c =>
         `<button type="button" class="popover-item" data-add="${c}">${CHANNELS[c].tip}</button>`
       ).join('');
-      host.appendChild(pop);
+      container.appendChild(pop);
       pop.querySelectorAll('[data-add]').forEach(btn => {
         btn.addEventListener('click', () => {
           const c = btn.dataset.add;
+          onBeforeSwitch?.();
           draft.channels.push(c);
           draft.perChannel[c] = newChannelConfig();
           draft.active = c;
-          closePanel();
-          renderTabs();
+          onAfterSwitch?.();
+          renderChannelTabs(container, handlers);
           renderRows();
           renderPreview();
         });
@@ -174,6 +214,71 @@ function renderTabs() {
     });
   }
   refreshIcons();
+}
+
+function renderTimingForm(panel) {
+  const host = panel.querySelector('#ntTimingForm');
+  if (!host || !draft) return;
+  const t = draft.perChannel[draft.active].timing || {};
+  const type0 = t.type || 'now';
+  host.innerHTML = `
+    <div class="field">
+      <div class="radio-group">
+        <label><input type="radio" name="ntTiming" value="now" ${type0 === 'now' ? 'checked' : ''}>审批通过后发送</label>
+        <label><input type="radio" name="ntTiming" value="scheduled" ${type0 === 'scheduled' ? 'checked' : ''}>定时</label>
+        <label><input type="radio" name="ntTiming" value="recurring" ${type0 === 'recurring' ? 'checked' : ''}>循环</label>
+      </div>
+    </div>
+    <div class="send-config" id="ntScheduled" ${type0 !== 'scheduled' ? 'hidden' : ''}>
+      <input type="datetime-local" class="input" id="ntDatetime" value="${t.datetime || '2026-07-15T10:00'}">
+    </div>
+    <div class="send-config" id="ntRecurring" ${type0 !== 'recurring' ? 'hidden' : ''}>
+      <select class="select" id="ntFreq">
+        <option value="daily" ${t.freq !== 'weekly' ? 'selected' : ''}>每天</option>
+        <option value="weekly" ${t.freq === 'weekly' ? 'selected' : ''}>每周</option>
+      </select>
+      <select class="select" id="ntWeekday" ${t.freq !== 'weekly' ? 'hidden' : ''}>
+        ${WEEKDAYS.map(w => `<option ${t.weekday === w ? 'selected' : ''}>${w}</option>`).join('')}
+      </select>
+      <input type="time" class="input" id="ntTime" value="${t.time || '10:00'}">
+    </div>`;
+
+  host.querySelectorAll('input[name="ntTiming"]').forEach(r => {
+    r.addEventListener('change', () => {
+      host.querySelector('#ntScheduled').hidden = r.value !== 'scheduled';
+      host.querySelector('#ntRecurring').hidden = r.value !== 'recurring';
+    });
+  });
+  host.querySelector('#ntFreq').addEventListener('change', e => {
+    host.querySelector('#ntWeekday').hidden = e.target.value !== 'weekly';
+  });
+  enhanceSelects(host);
+}
+
+function refreshTimingPanel(panel) {
+  renderChannelTabs(panel.querySelector('#ntChannelTabs'), {
+    onBeforeSwitch: () => saveTimingFromPanel(panel),
+    onAfterSwitch: () => renderTimingForm(panel),
+  });
+  renderTimingForm(panel);
+}
+
+function refreshContentPanel(panel) {
+  renderChannelTabs(panel.querySelector('#ntChannelTabs'), {
+    onBeforeSwitch: saveActiveContentEditor,
+    onAfterSwitch: () => mountContentEditor(panel.querySelector('#ntContentEditor')),
+  });
+  mountContentEditor(panel.querySelector('#ntContentEditor'));
+}
+
+function multiChannelSummary(channels, isDone) {
+  const done = channels.filter(c => isDone(c));
+  if (!done.length) return null;
+  if (channels.length === 1) return CHANNELS[channels[0]].tip;
+  if (done.length === channels.length) {
+    return `${channels.map(c => CHANNELS[c].tip).join(' · ')} 已配置`;
+  }
+  return `${done.map(c => CHANNELS[c].tip).join(' · ')} 等 ${channels.length} 个通道`;
 }
 
 function timingLabel(t) {
@@ -199,18 +304,24 @@ function renderRows() {
     ? `<span class="cfg-summary">${parts.join(' ｜ ')}</span>`
     : '<span class="placeholder">请选择人群</span>';
 
-  const cfg = draft.perChannel[draft.active];
   const tv = document.getElementById('timingValue');
-  const tl = timingLabel(cfg.timing);
-  tv.innerHTML = tl
-    ? `<span class="tag tag-primary">${tl}</span>`
-    : '<span class="placeholder">请选择发送时机</span>';
+  const timingDone = draft.channels.filter(c => draft.perChannel[c].timing);
+  if (!timingDone.length) {
+    tv.innerHTML = '<span class="placeholder">请选择发送时机</span>';
+  } else if (draft.channels.length === 1) {
+    tv.innerHTML = `<span class="tag tag-primary">${timingLabel(draft.perChannel[draft.channels[0]].timing)}</span>`;
+  } else {
+    tv.innerHTML = `<span class="cfg-summary">${multiChannelSummary(draft.channels, c => !!draft.perChannel[c].timing)}</span>`;
+  }
 
   const cv = document.getElementById('contentValue');
-  if (hasContent(cfg.content)) {
-    cv.innerHTML = `<span class="cfg-summary">${contentSummary(cfg.content)}</span>`;
-  } else {
+  const contentDone = draft.channels.filter(c => hasContent(draft.perChannel[c].content));
+  if (!contentDone.length) {
     cv.innerHTML = '<span class="placeholder">请配置发送内容</span>';
+  } else if (draft.channels.length === 1) {
+    cv.innerHTML = `<span class="cfg-summary">${contentSummary(draft.perChannel[draft.channels[0]].content)}</span>`;
+  } else {
+    cv.innerHTML = `<span class="cfg-summary">${multiChannelSummary(draft.channels, c => hasContent(draft.perChannel[c].content))}</span>`;
   }
 }
 
@@ -411,81 +522,37 @@ function openPanel(type) {
     });
   } else if (type === 'timing') {
     document.getElementById('rowTiming').classList.add('active');
-    const t = draft.perChannel[draft.active].timing || {};
-    const type0 = t.type || 'now';
     panel.innerHTML = `
-      <div class="panel-title">发送时机 · ${CHANNELS[draft.active].tip}</div>
-      <div class="field">
-        <div class="radio-group">
-          <label><input type="radio" name="ntTiming" value="now" ${type0 === 'now' ? 'checked' : ''}>审批通过后发送</label>
-          <label><input type="radio" name="ntTiming" value="scheduled" ${type0 === 'scheduled' ? 'checked' : ''}>定时</label>
-          <label><input type="radio" name="ntTiming" value="recurring" ${type0 === 'recurring' ? 'checked' : ''}>循环</label>
-        </div>
-      </div>
-      <div class="send-config" id="ntScheduled" ${type0 !== 'scheduled' ? 'hidden' : ''}>
-        <input type="datetime-local" class="input" id="ntDatetime" value="${t.datetime || '2026-07-15T10:00'}">
-      </div>
-      <div class="send-config" id="ntRecurring" ${type0 !== 'recurring' ? 'hidden' : ''}>
-        <select class="select" id="ntFreq">
-          <option value="daily" ${t.freq !== 'weekly' ? 'selected' : ''}>每天</option>
-          <option value="weekly" ${t.freq === 'weekly' ? 'selected' : ''}>每周</option>
-        </select>
-        <select class="select" id="ntWeekday" ${t.freq !== 'weekly' ? 'hidden' : ''}>
-          ${WEEKDAYS.map(w => `<option ${t.weekday === w ? 'selected' : ''}>${w}</option>`).join('')}
-        </select>
-        <input type="time" class="input" id="ntTime" value="${t.time || '10:00'}">
-      </div>
+      <div class="panel-title">时间（When）</div>
+      <div class="tabs nt-channel-tabs" id="ntChannelTabs"></div>
+      <div id="ntTimingForm"></div>
       <div class="panel-actions">
         <button type="button" class="btn btn-outline" id="panelCancel">取消</button>
         <button type="button" class="btn btn-primary" id="panelOk">确认</button>
       </div>`;
 
-    panel.querySelectorAll('input[name="ntTiming"]').forEach(r => {
-      r.addEventListener('change', () => {
-        panel.querySelector('#ntScheduled').hidden = r.value !== 'scheduled';
-        panel.querySelector('#ntRecurring').hidden = r.value !== 'recurring';
-      });
-    });
-    panel.querySelector('#ntFreq').addEventListener('change', e => {
-      panel.querySelector('#ntWeekday').hidden = e.target.value !== 'weekly';
-    });
+    refreshTimingPanel(panel);
+
     panel.querySelector('#panelOk').addEventListener('click', () => {
-      const sel = panel.querySelector('input[name="ntTiming"]:checked').value;
-      draft.perChannel[draft.active].timing = {
-        type: sel,
-        datetime: panel.querySelector('#ntDatetime').value,
-        freq: panel.querySelector('#ntFreq').value,
-        weekday: panel.querySelector('#ntWeekday').value,
-        time: panel.querySelector('#ntTime').value,
-      };
+      saveTimingFromPanel(panel);
       closePanel();
       renderRows();
     });
   } else if (type === 'content') {
     document.getElementById('rowContent').classList.add('active');
     panel.innerHTML = `
-      <div class="panel-title">发送内容 · ${CHANNELS[draft.active].tip}</div>
+      <div class="panel-title">内容（What）</div>
+      <div class="tabs nt-channel-tabs" id="ntChannelTabs"></div>
       <div id="ntContentEditor"></div>
       <div class="panel-actions">
         <button type="button" class="btn btn-outline" id="panelCancel">取消</button>
         <button type="button" class="btn btn-primary" id="panelOk">确认</button>
       </div>`;
 
-    const savedContent = draft.perChannel[draft.active].content;
-    panelContentEditor = createContentEditor({
-      container: panel.querySelector('#ntContentEditor'),
-      channel: draft.active,
-      value: savedContent,
-      showTemplateTools: true,
-      onChange: () => {
-        const previewContent = panelContentEditor.getValue();
-        draft.perChannel[draft.active].content = previewContent;
-        renderPreview();
-      },
-    });
+    refreshContentPanel(panel);
 
     panel.querySelector('#panelOk').addEventListener('click', () => {
-      draft.perChannel[draft.active].content = panelContentEditor.getValue();
+      saveActiveContentEditor();
       closePanel();
       renderRows();
       renderPreview();
